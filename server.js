@@ -10,9 +10,10 @@ const TIKTOK_USERNAME = process.env.TIKTOK_USERNAME || 'hackystreaming';
 
 // ─── CORS — allow your Vercel alert page to connect ────────────────────────
 app.use(cors({ origin: '*' }));
-app.use(express.static('public'));
+app.use(express.static(__dirname));
 
-// ─── CONNECTED SSE CLIENTS ─────────────────────────────────────────────────
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let tiktokStatus = 'disconnected';
 const clients = new Set();
 
 function broadcast(event, data) {
@@ -46,8 +47,41 @@ app.get('/events', (req, res) => {
   });
 });
 
+// ─── ROOT ROUTE ─────────────────────────────────────────────────────────────
+app.get('/', (_, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>🎁 TikTok Gift Proxy — @${TIKTOK_USERNAME}</title>
+      <style>
+        body { background:#0a0a0f; color:#fff; font-family:monospace; display:flex;
+               align-items:center; justify-content:center; height:100vh; margin:0; }
+        .box { text-align:center; padding:40px; border:1px solid rgba(255,255,255,0.1);
+               border-radius:16px; background:rgba(255,255,255,0.04); }
+        h1 { font-size:28px; margin-bottom:8px; }
+        p  { color:rgba(255,255,255,0.5); margin:6px 0; }
+        .dot { display:inline-block; width:10px; height:10px; border-radius:50%;
+               background:${tiktokStatus === 'connected' ? '#00d26a' : '#ff2d55'};
+               margin-right:8px; vertical-align:middle; }
+        a { color:#69c9d0; }
+      </style>
+    </head>
+    <body>
+      <div class="box">
+        <h1>🎁 TikTok Gift Alert Proxy</h1>
+        <p>Username: <b>@${TIKTOK_USERNAME}</b></p>
+        <p><span class="dot"></span>Status: <b>${tiktokStatus}</b></p>
+        <p>Connected clients: <b>${clients.size}</b></p>
+        <p style="margin-top:20px">SSE endpoint: <a href="/events">/events</a></p>
+        <p>Status JSON: <a href="/status">/status</a></p>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
 // ─── STATUS ENDPOINT ────────────────────────────────────────────────────────
-let tiktokStatus = 'disconnected';
 app.get('/status', (_, res) => {
   res.json({ status: tiktokStatus, username: TIKTOK_USERNAME, clients: clients.size });
 });
