@@ -19,7 +19,7 @@
   /* ─── ALERT CONTAINER ─── */
   #alert-container {
     position: fixed;
-    bottom: 40px;
+    top: 60px;
     right: 40px;
     display: flex;
     flex-direction: column;
@@ -143,10 +143,17 @@
   }
 
   .alert-gift-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--c1-bright);
-    letter-spacing: 0.3px;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    color: #fff;
+    background: linear-gradient(90deg, var(--c1), var(--c2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 0 6px var(--c1-soft));
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
