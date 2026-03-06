@@ -4,18 +4,15 @@ const path    = require('path');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
-
 const TIKTOK_USERNAME = process.env.TIKTOK_USERNAME || 'hackystreaming';
 
 app.use(cors({ origin: '*' }));
 
-// ─── STATE ──────────────────────────────────────────────────────────────────
 let tiktokStatus   = 'disconnected';
 let tiktok         = null;
 let reconnectTimer = null;
 const clients      = new Set();
 
-// ─── SSE BROADCAST ──────────────────────────────────────────────────────────
 function broadcast(event, data) {
   const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const res of clients) {
@@ -23,24 +20,54 @@ function broadcast(event, data) {
   }
 }
 
-// ─── ROUTES (must come BEFORE static middleware) ─────────────────────────────
-
+// ── Status page
 app.get('/', (req, res) => {
   const color = tiktokStatus === 'connected' ? '#00d26a' : tiktokStatus === 'connecting' ? '#ffd700' : '#ff2d55';
   res.send(`<!DOCTYPE html>
 <html><head><title>TikTok Gift Proxy</title><meta charset="UTF-8"/>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0f;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh}.box{text-align:center;padding:48px 56px;border:1px solid rgba(255,255,255,0.08);border-radius:20px;background:rgba(255,255,255,0.03)}h1{font-size:26px;margin-bottom:20px}p{color:rgba(255,255,255,0.5);margin:8px 0;font-size:14px}b{color:#fff}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:8px;vertical-align:middle}a{color:#69c9d0;text-decoration:none}.links{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06)}</style>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0a0f;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh}
+  .box{text-align:center;padding:48px 56px;border:1px solid rgba(255,255,255,0.08);border-radius:20px;background:rgba(255,255,255,0.03)}
+  h1{font-size:26px;margin-bottom:20px}
+  p{color:rgba(255,255,255,0.5);margin:8px 0;font-size:14px}
+  b{color:#fff}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:8px;vertical-align:middle}
+  a{color:#69c9d0;text-decoration:none}
+  .links{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06)}
+  .testbtn{margin-top:20px;padding:12px 28px;background:linear-gradient(135deg,#ff2d55,#ff6b00);border:none;border-radius:10px;color:#fff;font-size:15px;font-family:monospace;cursor:pointer;letter-spacing:1px}
+  .testbtn:hover{opacity:0.85}
+  #result{margin-top:10px;font-size:12px;color:#00d26a;min-height:18px}
+</style>
 </head><body><div class="box">
 <h1>🎁 TikTok Gift Alert Proxy</h1>
 <p>Username: <b>@${TIKTOK_USERNAME}</b></p>
 <p><span class="dot"></span>TikTok: <b>${tiktokStatus}</b></p>
-<p>OBS clients: <b>${clients.size}</b></p>
+<p>OBS clients connected: <b>${clients.size}</b></p>
 <div class="links">
-<p><a href="/overlay">🖥 Overlay (add this to OBS)</a></p>
-<p><a href="/status">/status JSON</a></p>
-</div></div></body></html>`);
+  <p><a href="/overlay">🖥 Overlay page (OBS source)</a></p>
+  <p><a href="/status">/status JSON</a></p>
+</div>
+<button class="testbtn" onclick="sendTest()">🎭 Send Test Alert to OBS</button>
+<div id="result"></div>
+</div>
+<script>
+async function sendTest(){
+  const r = document.getElementById('result');
+  r.textContent = 'Sending...';
+  try {
+    const res = await fetch('/test');
+    const d = await res.json();
+    r.textContent = d.obsClients > 0
+      ? 'Alert sent to OBS! (' + d.obsClients + ' client) — ' + d.sent.nickname + ' sent ' + d.sent.giftName
+      : 'No OBS clients connected yet!';
+  } catch(e){ r.textContent = 'Error: ' + e.message; }
+}
+</script>
+</body></html>`);
 });
 
+// ── SSE stream
 app.get('/events', (req, res) => {
   res.setHeader('Content-Type',      'text/event-stream');
   res.setHeader('Cache-Control',     'no-cache');
@@ -62,18 +89,35 @@ app.get('/events', (req, res) => {
   });
 });
 
+// ── Status JSON
 app.get('/status', (req, res) => {
   res.json({ status: tiktokStatus, username: TIKTOK_USERNAME, clients: clients.size });
 });
 
+// ── Test endpoint — sends a fake gift to ALL connected OBS clients
+app.get('/test', (req, res) => {
+  const gifts = [
+    { nickname: 'TestViewer',       giftName: 'Rose',     count: 5, coins: 5     },
+    { nickname: 'xXDragonSlayerXx', giftName: 'Lion',     count: 1, coins: 29999 },
+    { nickname: 'TikTokQueen99',    giftName: 'Diamond',  count: 3, coins: 15000 },
+    { nickname: 'CosmicVibes',      giftName: 'Universe', count: 1, coins: 34999 },
+    { nickname: 'PixelPrincess',    giftName: 'Crown',    count: 2, coins: 1000  },
+  ];
+  const gift = gifts[Math.floor(Math.random() * gifts.length)];
+  broadcast('gift', { ...gift, uniqueId: gift.nickname, timestamp: Date.now() });
+  console.log(`[Test] Sent fake gift to ${clients.size} OBS client(s):`, gift.giftName);
+  res.json({ ok: true, sent: gift, obsClients: clients.size });
+});
+
+// ── Overlay HTML
 app.get('/overlay', (req, res) => {
   res.sendFile(path.join(__dirname, 'tiktok-gift-alert.html'));
 });
 
-// Static AFTER routes so it never shadows /
+// ── Static files (after all routes)
 app.use(express.static(__dirname, { index: false }));
 
-// ─── TIKTOK CONNECTION ───────────────────────────────────────────────────────
+// ── TikTok connection
 function connectTikTok() {
   let WebcastPushConnection;
   try {
@@ -151,9 +195,7 @@ function scheduleReconnect(ms = 30000) {
   reconnectTimer = setTimeout(connectTikTok, ms);
 }
 
-// ─── START ───────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n[Server] TikTok Gift Proxy running on port ${PORT}`);
-  console.log(`[Server] @${TIKTOK_USERNAME}`);
+  console.log(`[Server] Running on port ${PORT} — @${TIKTOK_USERNAME}`);
   connectTikTok();
 });
