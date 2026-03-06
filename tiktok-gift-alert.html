@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TikTok Gift Alerts</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: transparent;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* ─── ALERT CONTAINER ─── */
+  #alert-container {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* ─── SINGLE ALERT CARD ─── */
+  .gift-alert {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 22px 14px 16px;
+    border-radius: 20px;
+    min-width: 320px;
+    max-width: 420px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(120px) scale(0.85);
+    animation: slideIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+               fadeOut 0.45s ease-in forwards var(--hold-time, 3.5s);
+    will-change: transform, opacity;
+
+    /* glassmorphism + gradient border trick */
+    background: linear-gradient(135deg, rgba(20,20,35,0.92), rgba(10,10,20,0.96));
+    box-shadow:
+      0 0 0 1.5px rgba(255,255,255,0.07),
+      0 8px 40px rgba(0,0,0,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+    backdrop-filter: blur(18px);
+  }
+
+  /* animated border glow */
+  .gift-alert::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 1.5px;
+    background: linear-gradient(135deg, var(--c1), var(--c2), var(--c1));
+    background-size: 200% 200%;
+    animation: borderRotate 2.5s linear infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* sparkle burst overlay */
+  .gift-alert::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: radial-gradient(circle at 20% 50%, var(--c1-soft) 0%, transparent 60%);
+    pointer-events: none;
+    opacity: 0.35;
+  }
+
+  /* ─── EMOJI ICON BUBBLE ─── */
+  .alert-icon {
+    position: relative;
+    flex-shrink: 0;
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    box-shadow: 0 4px 20px var(--c1-soft);
+    animation: iconPop 0.6s cubic-bezier(0.34, 1.7, 0.64, 1) 0.1s both;
+    z-index: 1;
+  }
+
+  .alert-icon .count-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ff2d55;
+    color: #fff;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    min-width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    border: 2px solid rgba(20,20,35,0.92);
+    animation: badgePop 0.4s cubic-bezier(0.34, 2, 0.64, 1) 0.3s both;
+  }
+
+  /* ─── TEXT CONTENT ─── */
+  .alert-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    z-index: 1;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .alert-username {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 22px;
+    letter-spacing: 1.5px;
+    color: #fff;
+    text-shadow: 0 0 20px var(--c1-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+  }
+
+  .alert-gift-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c1-bright);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .alert-subtext {
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.2px;
+  }
+
+  /* ─── COIN VALUE TAG ─── */
+  .alert-coins {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,215,0,0.12);
+    border: 1px solid rgba(255,215,0,0.25);
+    border-radius: 30px;
+    padding: 4px 11px;
+    flex-shrink: 0;
+    z-index: 1;
+    animation: coinSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s both;
+  }
+
+  .alert-coins .coin-icon { font-size: 14px; }
+  .alert-coins .coin-value {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 17px;
+    color: #ffd700;
+    letter-spacing: 1px;
+    text-shadow: 0 0 12px rgba(255,215,0,0.6);
+  }
+
+  /* ─── PROGRESS BAR ─── */
+  .alert-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    border-radius: 0 0 20px 20px;
+    background: linear-gradient(90deg, var(--c1), var(--c2));
+    animation: shrink var(--total-time, 4s) linear forwards;
+    transform-origin: left;
+    width: 100%;
+  }
+
+  /* ─── PARTICLES ─── */
+  .particles-wrap {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 20px;
+    z-index: 0;
+  }
+
+  .particle {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--c1-bright);
+    opacity: 0;
+    animation: floatUp var(--dur) ease-out var(--delay) infinite;
+  }
+
+  /* ─── TIKTOK LOGO WATERMARK ─── */
+  .tiktok-mark {
+    position: absolute;
+    top: 11px;
+    right: 14px;
+    opacity: 0.18;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+    z-index: 1;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(120px) scale(0.85); }
+    to   { opacity: 1; transform: translateX(0)    scale(1); }
+  }
+
+  @keyframes fadeOut {
+    0%   { opacity: 1; transform: translateX(0) scale(1); }
+    80%  { opacity: 0; transform: translateX(30px) scale(0.95); }
+    100% { opacity: 0; transform: translateX(60px) scale(0.9); }
+  }
+
+  @keyframes borderRotate {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes iconPop {
+    from { transform: scale(0) rotate(-20deg); }
+    to   { transform: scale(1) rotate(0deg); }
+  }
+
+  @keyframes badgePop {
+    from { transform: scale(0); }
+    to   { transform: scale(1); }
+  }
+
+  @keyframes coinSlide {
+    from { transform: translateX(20px); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+  }
+
+  @keyframes shrink {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+  }
+
+  @keyframes floatUp {
+    0%   { opacity: 0; transform: translateY(0) scale(1); }
+    20%  { opacity: 0.7; }
+    100% { opacity: 0; transform: translateY(-60px) scale(0.3); }
+  }
+
+  /* ─── SCREEN FLASH ─── */
+  #flash {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 70% 80%, rgba(255,75,120,0.18), transparent 60%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.08s ease;
+    z-index: 998;
+  }
+  #flash.active { opacity: 1; }
+
+  /* ─── CONFIG PANEL (hidden in OBS, visible in browser for setup) ─── */
+  #config-panel {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    background: rgba(10,10,20,0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 18px 22px;
+    color: #fff;
+    font-size: 13px;
+    width: 280px;
+    z-index: 1000;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+
+  #config-panel h3 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 20px;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    color: #ff2d55;
+  }
+
+  #config-panel label {
+    display: block;
+    margin-bottom: 4px;
+    color: rgba(255,255,255,0.6);
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  #config-panel input {
+    width: 100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  #config-panel input:focus {
+    border-color: #ff2d55;
+    background: rgba(255,45,85,0.08);
+  }
+
+  #config-panel button {
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(135deg, #ff2d55, #ff6b00);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 17px;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    margin-bottom: 8px;
+  }
+
+  #config-panel button:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(255,45,85,0.5); }
+
+  #config-panel .test-btn {
+    background: linear-gradient(135deg, #5c35cc, #0070f3);
+    margin-bottom: 0;
+  }
+
+  #status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #555;
+    margin-right: 6px;
+    vertical-align: middle;
+    transition: background 0.3s;
+  }
+  #status-dot.connected { background: #00d26a; box-shadow: 0 0 8px #00d26a; }
+  #status-dot.error     { background: #ff2d55; box-shadow: 0 0 8px #ff2d55; }
+
+  #status-text { color: rgba(255,255,255,0.5); font-size: 11px; }
+
+  /* hide panel when ?obs=1 param */
+  body.obs-mode #config-panel { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="flash"></div>
+<div id="alert-container"></div>
+
+<!-- SETUP PANEL (hidden in OBS mode via ?obs=1) -->
+<div id="config-panel">
+  <h3>🎁 @hackystreaming</h3>
+
+  <label>Proxy URL</label>
+  <input id="input-proxy" type="text" placeholder="https://your-proxy.vercel.app" />
+
+  <label>Alert Duration (seconds)</label>
+  <input id="input-duration" type="number" value="5" min="2" max="15" />
+
+  <button onclick="connectProxy()">▶ Connect</button>
+  <button class="test-btn" onclick="testAlert()">🎭 Test Alert</button>
+
+  <div style="margin-top:10px">
+    <span id="status-dot"></span>
+    <span id="status-text">Not connected</span>
+  </div>
+
+  <div style="margin-top:12px; padding:10px; background:rgba(255,255,255,0.04); border-radius:8px; font-size:11px; color:rgba(255,255,255,0.4); line-height:1.7">
+    📍 Deploy <b style="color:rgba(255,255,255,0.6)">server.js</b> to Vercel first,<br>
+    then paste the URL above and click Connect.
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+const params   = new URLSearchParams(location.search);
+const OBS_MODE = params.has('obs');
+if (OBS_MODE) document.body.classList.add('obs-mode');
+
+// Pre-fill proxy URL from ?proxy=  or default to same origin
+const urlProxy = params.get('proxy') || '';
+document.getElementById('input-proxy').value = urlProxy;
+const urlDur = params.get('dur');
+if (urlDur) document.getElementById('input-duration').value = urlDur;
+
+/* ─────────────────────────────────────────────
+   GIFT DATABASE  (emoji + color scheme + coins)
+───────────────────────────────────────────── */
+const GIFT_DATA = {
+  // Key: gift name (lowercase) → { emoji, c1, c2, coins }
+  'rose':          { emoji: '🌹', c1: '#ff2d55', c2: '#ff6b9d', coins: 1   },
+  'finger heart':  { emoji: '🤟', c1: '#ff2d55', c2: '#ff9a3c', coins: 5   },
+  'tiktok':        { emoji: '🎵', c1: '#010101', c2: '#69c9d0', coins: 1   },
+  'sunglasses':    { emoji: '😎', c1: '#0070f3', c2: '#00cfff', coins: 5   },
+  'diamond':       { emoji: '💎', c1: '#5c35cc', c2: '#00cfff', coins: 5000},
+  'universe':      { emoji: '🌌', c1: '#5c35cc', c2: '#ff2d55', coins: 34999},
+  'lion':          { emoji: '🦁', c1: '#ff9a3c', c2: '#ffd700', coins: 29999},
+  'interstellar':  { emoji: '🚀', c1: '#0a0a0f', c2: '#5c35cc', coins: 9999 },
+  'heart me':      { emoji: '💖', c1: '#ff2d55', c2: '#ff6baf', coins: 10  },
+  'ice cream':     { emoji: '🍦', c1: '#f7a8d8', c2: '#a8d8f7', coins: 1   },
+  'balloon':       { emoji: '🎈', c1: '#ff6b00', c2: '#ffd700', coins: 1   },
+  'confetti':      { emoji: '🎉', c1: '#ffd700', c2: '#ff6b00', coins: 10  },
+  'star':          { emoji: '⭐', c1: '#ffd700', c2: '#ff9a3c', coins: 5   },
+  'crown':         { emoji: '👑', c1: '#ffd700', c2: '#ff6b00', coins: 500 },
+  'default':       { emoji: '🎁', c1: '#ff2d55', c2: '#5c35cc', coins: 1   },
+};
+
+function getGiftInfo(name) {
+  const key = (name || '').toLowerCase();
+  for (const [k, v] of Object.entries(GIFT_DATA)) {
+    if (key.includes(k)) return { ...v, name };
+  }
+  return { ...GIFT_DATA['default'], name };
+}
+
+/* ─────────────────────────────────────────────
+   ALERT QUEUE  (max 3 on screen at once)
+───────────────────────────────────────────── */
+const MAX_VISIBLE = 3;
+const queue = [];
+let activeAlerts = 0;
+
+function enqueue(data) {
+  queue.push(data);
+  processQueue();
+}
+
+function processQueue() {
+  while (activeAlerts < MAX_VISIBLE && queue.length > 0) {
+    showAlert(queue.shift());
+  }
+}
+
+/* ─────────────────────────────────────────────
+   SHOW ALERT
+───────────────────────────────────────────── */
+function showAlert({ username, giftName, count = 1, coins }) {
+  const dur = parseFloat(document.getElementById('input-duration').value) || 5;
+  const holdMs = (dur - 0.45) * 1000;
+  const totalSec = dur;
+
+  const info = getGiftInfo(giftName);
+  const totalCoins = coins || (info.coins * count);
+
+  // flash
+  const flash = document.getElementById('flash');
+  flash.classList.add('active');
+  setTimeout(() => flash.classList.remove('active'), 180);
+
+  const container = document.getElementById('alert-container');
+  const card = document.createElement('div');
+  card.className = 'gift-alert';
+  card.style.cssText = `
+    --c1: ${info.c1};
+    --c2: ${info.c2};
+    --c1-soft: ${info.c1}55;
+    --c1-bright: ${info.c1};
+    --hold-time: ${holdMs}ms;
+    --total-time: ${totalSec}s;
+  `;
+
+  // particles
+  const pw = document.createElement('div');
+  pw.className = 'particles-wrap';
+  for (let i = 0; i < 8; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left: ${10 + Math.random() * 80}%;
+      bottom: ${Math.random() * 40}%;
+      --dur: ${1.2 + Math.random() * 1.5}s;
+      --delay: ${Math.random() * 1.5}s;
+      background: ${Math.random() > 0.5 ? info.c1 : info.c2};
+      width: ${3 + Math.random() * 5}px;
+      height: ${3 + Math.random() * 5}px;
+    `;
+    pw.appendChild(p);
+  }
+  card.appendChild(pw);
+
+  card.innerHTML += `
+    <div class="tiktok-mark">TIKTOK LIVE</div>
+    <div class="alert-icon">
+      ${info.emoji}
+      ${count > 1 ? `<div class="count-badge">×${count}</div>` : ''}
+    </div>
+    <div class="alert-body">
+      <div class="alert-username">${escHtml(username)}</div>
+      <div class="alert-gift-name">${escHtml(giftName)}</div>
+      <div class="alert-subtext">sent a gift 🎁</div>
+    </div>
+    <div class="alert-coins">
+      <span class="coin-icon">🪙</span>
+      <span class="coin-value">${formatCoins(totalCoins)}</span>
+    </div>
+    <div class="alert-progress"></div>
+  `;
+
+  container.appendChild(card);
+  activeAlerts++;
+
+  // remove after animation ends
+  const totalMs = dur * 1000 + 100;
+  setTimeout(() => {
+    card.remove();
+    activeAlerts--;
+    processQueue();
+  }, totalMs);
+}
+
+/* ─────────────────────────────────────────────
+   PROXY CONNECTION  —  SSE from server.js
+───────────────────────────────────────────── */
+let evtSource = null;
+
+function connectProxy() {
+  const base = document.getElementById('input-proxy').value.trim().replace(/\/$/, '');
+  if (!base) { setStatus('error', 'Enter your proxy URL first'); return; }
+
+  if (evtSource) { evtSource.close(); evtSource = null; }
+
+  setStatus('connecting', 'Connecting to proxy…');
+
+  const url = `${base}/events`;
+  evtSource = new EventSource(url);
+
+  evtSource.addEventListener('connected', () => {
+    setStatus('connected', '@hackystreaming • Live 🔴');
+  });
+
+  evtSource.addEventListener('offline', () => {
+    setStatus('error', 'Not live yet — waiting…');
+  });
+
+  evtSource.addEventListener('gift', (e) => {
+    try {
+      const d = JSON.parse(e.data);
+      enqueue({
+        username: d.nickname  || d.uniqueId || 'Someone',
+        giftName: d.giftName  || 'Gift',
+        count:    d.count     || 1,
+        coins:    d.coins     || null,
+      });
+    } catch(err) { console.warn('[SSE] parse error', err); }
+  });
+
+  evtSource.onopen  = () => setStatus('connected', '@hackystreaming • Live 🔴');
+  evtSource.onerror = () => setStatus('error', 'Connection lost — retrying…');
+}
+
+/* ─────────────────────────────────────────────
+   TEST ALERT
+───────────────────────────────────────────── */
+const TEST_GIFTS = [
+  { username: 'xXDragonSlayerXx', giftName: 'Rose',      count: 5  },
+  { username: 'TikTokQueen99',    giftName: 'Lion',       count: 1  },
+  { username: 'NightOwl_Stream',  giftName: 'Diamond',    count: 3  },
+  { username: 'CosmicVibes',      giftName: 'Universe',   count: 1  },
+  { username: 'PixelPrincess',    giftName: 'Heart Me',   count: 10 },
+  { username: 'ShadowKnight',     giftName: 'Crown',      count: 2  },
+];
+let testIdx = 0;
+function testAlert() {
+  const t = TEST_GIFTS[testIdx % TEST_GIFTS.length];
+  testIdx++;
+  enqueue({ ...t });
+}
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function setStatus(state, msg) {
+  const dot = document.getElementById('status-dot');
+  dot.className = 'status-dot';
+  if (state === 'connected') dot.classList.add('connected');
+  if (state === 'error')     dot.classList.add('error');
+  document.getElementById('status-text').textContent = msg;
+}
+
+function formatCoins(n) {
+  if (n >= 1000) return (n/1000).toFixed(1).replace('.0','') + 'K';
+  return n;
+}
+
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ─────────────────────────────────────────────
+   AUTO-CONNECT if URL params set
+───────────────────────────────────────────── */
+if (OBS_MODE && urlProxy) {
+  setTimeout(connectProxy, 500);
+}
+</script>
+</body>
+</html>
