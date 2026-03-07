@@ -296,6 +296,140 @@
     100% { opacity: 0; transform: translateY(-60px) scale(0.3); }
   }
 
+  /* ══════════════════════════════════════════
+     STREAK / BOOST ANIMATIONS
+  ══════════════════════════════════════════ */
+
+  /* ── Combo number that flies up ── */
+  .streak-combo {
+    position: absolute;
+    left: 50%;
+    top: -10px;
+    transform: translateX(-50%);
+    font-family: 'Bebas Neue', cursive;
+    font-size: var(--combo-size, 42px);
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow:
+      0 0 20px var(--c1),
+      0 0 40px var(--c1),
+      2px 2px 0 rgba(0,0,0,0.5);
+    z-index: 10;
+    pointer-events: none;
+    white-space: nowrap;
+    animation: comboFlyUp 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @keyframes comboFlyUp {
+    0%   { opacity: 0;   transform: translateX(-50%) translateY(20px) scale(0.4); }
+    15%  { opacity: 1;   transform: translateX(-50%) translateY(-10px) scale(1.3); }
+    35%  { opacity: 1;   transform: translateX(-50%) translateY(-20px) scale(1.0); }
+    70%  { opacity: 1;   transform: translateX(-50%) translateY(-30px) scale(1.0); }
+    100% { opacity: 0;   transform: translateX(-50%) translateY(-60px) scale(0.8); }
+  }
+
+  /* ── Shockwave ring that expands from card ── */
+  .shockwave {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    border: 3px solid var(--c1);
+    pointer-events: none;
+    z-index: 5;
+    animation: shockwaveExpand var(--sw-dur, 0.7s) ease-out forwards;
+  }
+
+  @keyframes shockwaveExpand {
+    0%   { opacity: 0.9; transform: scale(1);    filter: blur(0px); }
+    100% { opacity: 0;   transform: scale(1.35); filter: blur(3px); }
+  }
+
+  /* ── Screen shake for massive streaks ── */
+  @keyframes screenShake {
+    0%,100% { transform: translate(0,0) rotate(0deg); }
+    10%      { transform: translate(-4px, -2px) rotate(-0.5deg); }
+    20%      { transform: translate(4px,  2px) rotate(0.5deg); }
+    30%      { transform: translate(-3px,  3px) rotate(0deg); }
+    40%      { transform: translate(3px,  -3px) rotate(0.3deg); }
+    50%      { transform: translate(-2px,  2px) rotate(-0.3deg); }
+    60%      { transform: translate(2px,   1px) rotate(0.2deg); }
+    70%      { transform: translate(-1px, -1px) rotate(0deg); }
+  }
+
+  #alert-container.shake {
+    animation: screenShake 0.5s ease-in-out;
+  }
+
+  /* ── Lightning bolts ── */
+  .lightning {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 4;
+    border-radius: 20px;
+    overflow: visible;
+  }
+
+  .bolt {
+    position: absolute;
+    width: 3px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #fff 0%, #ffe000 40%, var(--c1) 100%);
+    box-shadow: 0 0 8px 2px #ffe000, 0 0 16px 4px var(--c1);
+    transform-origin: top center;
+    opacity: 0;
+    animation: boltFlash var(--b-dur, 0.25s) ease-out var(--b-delay, 0s) forwards;
+  }
+
+  @keyframes boltFlash {
+    0%   { opacity: 0;   transform: scaleY(0) rotate(var(--b-rot, 0deg)); }
+    20%  { opacity: 1;   transform: scaleY(1) rotate(var(--b-rot, 0deg)); }
+    70%  { opacity: 0.8; transform: scaleY(1) rotate(var(--b-rot, 0deg)); }
+    100% { opacity: 0;   transform: scaleY(1) rotate(var(--b-rot, 0deg)); }
+  }
+
+  /* ── Streak milestone label (x10! x50! x100!) ── */
+  .streak-label {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Bebas Neue', cursive;
+    font-size: 13px;
+    letter-spacing: 3px;
+    padding: 2px 12px;
+    border-radius: 20px;
+    z-index: 10;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: labelPop 0.4s cubic-bezier(0.34, 1.7, 0.64, 1) forwards;
+  }
+
+  .streak-label.tier-s1 { background: rgba(255,150,0,0.25); color: #ff9a3c; border: 1px solid rgba(255,150,0,0.4); }
+  .streak-label.tier-s2 { background: rgba(255,50,50,0.25);  color: #ff4444; border: 1px solid rgba(255,50,50,0.4); }
+  .streak-label.tier-s3 { background: rgba(180,0,255,0.25);  color: #cc44ff; border: 1px solid rgba(180,0,255,0.4); }
+  .streak-label.tier-s4 { background: rgba(255,215,0,0.25);  color: #ffd700; border: 1px solid rgba(255,215,0,0.5); text-shadow: 0 0 10px #ffd700; }
+
+  @keyframes labelPop {
+    from { opacity: 0; transform: translateX(-50%) scale(0.5); }
+    to   { opacity: 1; transform: translateX(-50%) scale(1); }
+  }
+
+  /* ── Card glow upgrade per streak tier ── */
+  .gift-alert.streak-s1 { box-shadow: 0 0 0 1.5px rgba(255,150,0,0.5), 0 8px 40px rgba(255,100,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1); }
+  .gift-alert.streak-s2 { box-shadow: 0 0 0 2px   rgba(255,50,50,0.6),  0 8px 50px rgba(255,0,0,0.45),   inset 0 1px 0 rgba(255,255,255,0.12); }
+  .gift-alert.streak-s3 { box-shadow: 0 0 0 2px   rgba(180,0,255,0.6),  0 8px 60px rgba(150,0,255,0.5),  inset 0 1px 0 rgba(255,255,255,0.15); animation: streakPulse3 1s ease-in-out infinite alternate; }
+  .gift-alert.streak-s4 { box-shadow: 0 0 0 2.5px rgba(255,215,0,0.8),  0 8px 80px rgba(255,180,0,0.6),  inset 0 1px 0 rgba(255,255,255,0.2);  animation: streakPulse4 0.6s ease-in-out infinite alternate; }
+
+  @keyframes streakPulse3 {
+    from { box-shadow: 0 0 0 2px rgba(180,0,255,0.6), 0 8px 60px rgba(150,0,255,0.5); }
+    to   { box-shadow: 0 0 0 3px rgba(200,0,255,0.9), 0 8px 90px rgba(180,0,255,0.7); }
+  }
+  @keyframes streakPulse4 {
+    from { box-shadow: 0 0 0 2.5px rgba(255,215,0,0.8), 0 8px 80px rgba(255,180,0,0.6); }
+    to   { box-shadow: 0 0 0 4px   rgba(255,235,0,1.0), 0 8px 120px rgba(255,200,0,0.9); }
+  }
+
   /* ─── SCREEN FLASH ─── */
   #flash {
     position: fixed;
@@ -679,6 +813,101 @@ function addFire(card, coins) {
 }
 
 /* ─────────────────────────────────────────────
+   STREAK / BOOST EFFECT
+   x10  → tier s1 — orange glow + shockwave + combo text
+   x25  → tier s2 — red glow + shockwave x2 + lightning
+   x50  → tier s3 — purple glow + screen shake + more lightning
+   x100 → tier s4 — gold inferno + full chaos
+───────────────────────────────────────────── */
+function addStreakEffect(card, count) {
+  if (count < 10) return;
+
+  const tier = count >= 100 ? 's4' : count >= 50 ? 's3' : count >= 25 ? 's2' : 's1';
+  const container = document.getElementById('alert-container');
+
+  // Add tier class for glow
+  card.classList.add(`streak-${tier}`);
+
+  // ── Combo number fly-up
+  const comboSizes = { s1: '38px', s2: '46px', s3: '56px', s4: '72px' };
+  const comboColors = { s1: '#ff9a3c', s2: '#ff4444', s3: '#cc44ff', s4: '#ffd700' };
+  const comboLabels = { s1: `×${count}`, s2: `×${count} 🔥`, s3: `×${count} ⚡`, s4: `×${count} 💥` };
+
+  const combo = document.createElement('div');
+  combo.className = 'streak-combo';
+  combo.textContent = comboLabels[tier];
+  combo.style.cssText = `--combo-size:${comboSizes[tier]}; color:${comboColors[tier]}; --c1:${comboColors[tier]};`;
+  card.appendChild(combo);
+  setTimeout(() => combo.remove(), 1500);
+
+  // ── Milestone label
+  const milestoneText = { s1: '🔥 ON FIRE', s2: '💥 BLAZING', s3: '⚡ UNSTOPPABLE', s4: '👑 LEGENDARY' };
+  const label = document.createElement('div');
+  label.className = `streak-label tier-${tier}`;
+  label.textContent = milestoneText[tier];
+  card.appendChild(label);
+
+  // ── Shockwave rings (more rings = higher tier)
+  const ringCount = tier === 's1' ? 1 : tier === 's2' ? 2 : tier === 's3' ? 3 : 4;
+  for (let i = 0; i < ringCount; i++) {
+    const sw = document.createElement('div');
+    sw.className = 'shockwave';
+    sw.style.cssText = `
+      --c1: ${comboColors[tier]};
+      --sw-dur: ${0.6 + i * 0.15}s;
+      animation-delay: ${i * 0.12}s;
+      border-color: ${comboColors[tier]};
+      opacity: ${1 - i * 0.2};
+    `;
+    card.appendChild(sw);
+    setTimeout(() => sw.remove(), 1200);
+  }
+
+  // ── Lightning bolts (s2+)
+  if (tier === 's2' || tier === 's3' || tier === 's4') {
+    const boltCount = tier === 's2' ? 3 : tier === 's3' ? 6 : 10;
+    const lWrap = document.createElement('div');
+    lWrap.className = 'lightning';
+    card.appendChild(lWrap);
+
+    for (let i = 0; i < boltCount; i++) {
+      const bolt = document.createElement('div');
+      bolt.className = 'bolt';
+      const height = 30 + Math.random() * 50;
+      const left   = 5 + Math.random() * 90;
+      const rot    = (Math.random() - 0.5) * 40;
+      bolt.style.cssText = `
+        left: ${left}%;
+        top: ${Math.random() > 0.5 ? '-5px' : 'auto'};
+        bottom: ${Math.random() > 0.5 ? '-5px' : 'auto'};
+        height: ${height}px;
+        --b-dur: ${0.2 + Math.random() * 0.2}s;
+        --b-delay: ${i * 0.06}s;
+        --b-rot: ${rot}deg;
+        --c1: ${comboColors[tier]};
+      `;
+      lWrap.appendChild(bolt);
+    }
+    setTimeout(() => lWrap.remove(), 1000);
+  }
+
+  // ── Screen shake (s3+)
+  if (tier === 's3' || tier === 's4') {
+    container.classList.add('shake');
+    setTimeout(() => container.classList.remove('shake'), 520);
+  }
+
+  // ── Extra screen flash color for big streaks
+  const flash = document.getElementById('flash');
+  flash.style.background = `radial-gradient(circle at 75% 85%, ${comboColors[tier]}33, transparent 60%)`;
+  flash.classList.add('active');
+  setTimeout(() => {
+    flash.classList.remove('active');
+    flash.style.background = '';
+  }, tier === 's4' ? 350 : 200);
+}
+
+/* ─────────────────────────────────────────────
    SHOW ALERT
 ───────────────────────────────────────────── */
 function showAlert({ username, giftName, count = 1, coins, pictureUrl = '' }) {
@@ -752,6 +981,7 @@ function showAlert({ username, giftName, count = 1, coins, pictureUrl = '' }) {
 
   container.appendChild(card);
   addFire(card, totalCoins);
+  addStreakEffect(card, count);
   activeAlerts++;
 
   // remove after animation ends
@@ -808,12 +1038,12 @@ function connectProxy() {
    TEST ALERT
 ───────────────────────────────────────────── */
 const TEST_GIFTS = [
-  { username: 'xXDragonSlayerXx', giftName: 'Rose',        count: 5,  coins: 5,     pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png' },
-  { username: 'TikTokQueen99',    giftName: 'Heart',        count: 10, coins: 100,   pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/0b4f61e8ab637f11449300d03929ef87.png~tplv-obj.png' },
-  { username: 'NightOwl_Stream',  giftName: 'Galaxy',       count: 1,  coins: 150,   pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/a4c4dc437fd3a6632aba149769491f49.png~tplv-obj.png' },
-  { username: 'PixelPrincess',    giftName: 'Crown',        count: 1,  coins: 300,   pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/77f6ab69b0b03bda98a0a3d2bfdeb46f.png~tplv-obj.png' },
-  { username: 'CosmicVibes',      giftName: 'Diamond',      count: 1,  coins: 5000,  pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.png' },
-  { username: 'ShadowKnight',     giftName: 'Universe',     count: 1,  coins: 34999, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/e9cafce8279220ed26016a71076d6a8a.png~tplv-obj.png' },
+  { username: 'NormalViewer',     giftName: 'Rose',     count: 1,   coins: 5,     pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png' },
+  { username: 'HeartSender',      giftName: 'Heart',    count: 10,  coins: 100,   pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/0b4f61e8ab637f11449300d03929ef87.png~tplv-obj.png' },
+  { username: 'xXDragonSlayerXx', giftName: 'Rose',    count: 25,  coins: 125,   pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png' },
+  { username: 'TikTokQueen99',    giftName: 'Galaxy',   count: 50,  coins: 2500,  pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/a4c4dc437fd3a6632aba149769491f49.png~tplv-obj.png' },
+  { username: 'CosmicVibes',      giftName: 'Diamond',  count: 100, coins: 50000, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.png' },
+  { username: 'ShadowKnight',     giftName: 'Universe', count: 1,   coins: 34999, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/e9cafce8279220ed26016a71076d6a8a.png~tplv-obj.png' },
 ];
 let testIdx = 0;
 function testAlert() {
