@@ -162,19 +162,35 @@ function connectTikTok() {
     });
 
   tiktok.on('gift', data => {
-    if (data.repeatEnd || data.repeatCount <= 1) {
-      const payload = {
-        uniqueId:   data.uniqueId,
-        nickname:   data.nickname    || data.uniqueId || 'Someone',
-        giftName:   data.giftName    || 'Gift',
-        count:      data.repeatCount || 1,
-        coins:      (data.diamondCount || 1) * (data.repeatCount || 1),
-        pictureUrl: data.giftPictureUrl || '',
-        timestamp:  Date.now(),
-      };
-      console.log(`[Gift] ${payload.nickname} x${payload.count} ${payload.giftName}`);
-      broadcast('gift', payload);
+    /*
+      TikTok sends gift events in two scenarios:
+      1. Streakable gifts (roses, hearts etc.) — fires repeatedly during streak,
+         then fires a FINAL event with repeatEnd = true. We ONLY want the final one.
+      2. Non-streakable gifts (diamonds, lions etc.) — giftType = 1, fires ONCE
+         with repeatEnd = false/undefined. We want this one immediately.
+
+      Fix: if giftType === 2 it's streakable → only fire on repeatEnd === true
+           if giftType === 1 it's non-streakable → fire immediately
+           This prevents the double-alert on roses.
+    */
+    const isStreakable = data.giftType === 2;
+
+    if (isStreakable && !data.repeatEnd) {
+      // Still mid-streak, skip — wait for the final event
+      return;
     }
+
+    const payload = {
+      uniqueId:   data.uniqueId,
+      nickname:   data.nickname    || data.uniqueId || 'Someone',
+      giftName:   data.giftName    || 'Gift',
+      count:      data.repeatCount || 1,
+      coins:      (data.diamondCount || 1) * (data.repeatCount || 1),
+      pictureUrl: data.giftPictureUrl || '',
+      timestamp:  Date.now(),
+    };
+    console.log(`[Gift] ${payload.nickname} x${payload.count} ${payload.giftName} (streakable=${isStreakable})`);
+    broadcast('gift', payload);
   });
 
   tiktok.on('disconnected', () => {
