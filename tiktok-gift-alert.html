@@ -290,6 +290,63 @@
   }
   #flash.active { opacity: 1; }
 
+  /* ─── FIRE CONTAINER ─── */
+  .fire-wrap {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 2;
+  }
+
+  /* ─── FIRE PARTICLE BASE ─── */
+  .flame {
+    position: absolute;
+    bottom: -4px;
+    border-radius: 50% 50% 30% 30%;
+    transform-origin: bottom center;
+    animation: flameFly var(--fdur, 0.9s) ease-out var(--fdelay, 0s) infinite;
+    opacity: 0;
+    filter: blur(var(--fblur, 1px));
+  }
+
+  /* Tier 1 fire: 100–200 coins — small orange flames */
+  .fire-t1 .flame {
+    width:  var(--fw, 8px);
+    height: var(--fh, 14px);
+    background: radial-gradient(ellipse at 50% 80%, #ff6b00, #ff2d00 60%, transparent 100%);
+    box-shadow: 0 0 6px 2px rgba(255,80,0,0.5);
+  }
+
+  /* Tier 2 fire: 200–500 coins — bigger orange+yellow flames */
+  .fire-t2 .flame {
+    width:  var(--fw, 12px);
+    height: var(--fh, 22px);
+    background: radial-gradient(ellipse at 50% 80%, #ffe000, #ff6b00 50%, #ff2d00 80%, transparent 100%);
+    box-shadow: 0 0 10px 3px rgba(255,140,0,0.6);
+  }
+
+  /* Tier 3 fire: 500+ coins — large white-core inferno */
+  .fire-t3 .flame {
+    width:  var(--fw, 16px);
+    height: var(--fh, 32px);
+    background: radial-gradient(ellipse at 50% 70%, #fff 0%, #ffe000 30%, #ff6b00 60%, #ff2d00 85%, transparent 100%);
+    box-shadow: 0 0 16px 5px rgba(255,180,0,0.7), 0 0 30px 8px rgba(255,80,0,0.35);
+  }
+
+  @keyframes flameFly {
+    0%   { opacity: 0;   transform: translateY(0)    scaleX(1)    rotate(var(--frot,0deg)); }
+    15%  { opacity: 0.9; }
+    60%  { opacity: 0.6; transform: translateY(var(--frise,-40px)) scaleX(0.7) rotate(calc(var(--frot,0deg) * -0.5)); }
+    100% { opacity: 0;   transform: translateY(var(--fmax,-70px))  scaleX(0.2) rotate(calc(var(--frot,0deg) * 0.3)); }
+  }
+
+  /* Card glow upgrade per tier */
+  .gift-alert.fire-t1 { box-shadow: 0 0 0 1.5px rgba(255,255,255,0.07), 0 8px 40px rgba(0,0,0,0.55), 0 0 30px rgba(255,100,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08); }
+  .gift-alert.fire-t2 { box-shadow: 0 0 0 1.5px rgba(255,200,0,0.3),    0 8px 40px rgba(0,0,0,0.55), 0 0 50px rgba(255,140,0,0.4),  inset 0 1px 0 rgba(255,255,255,0.1); }
+  .gift-alert.fire-t3 { box-shadow: 0 0 0 2px   rgba(255,220,0,0.5),    0 8px 60px rgba(0,0,0,0.6),  0 0 80px rgba(255,180,0,0.5),  inset 0 1px 0 rgba(255,255,255,0.15); }
+
   /* ─── CONFIG PANEL (hidden in OBS, visible in browser for setup) ─── */
   #config-panel {
     position: fixed;
@@ -548,6 +605,62 @@ function processQueue() {
 }
 
 /* ─────────────────────────────────────────────
+   FIRE EFFECT  — 3 tiers based on coin value
+   100–200  → tier 1 (small orange flames)
+   200–500  → tier 2 (bigger yellow-orange)
+   500+     → tier 3 (white-core inferno)
+───────────────────────────────────────────── */
+function addFire(card, coins) {
+  if (coins < 100) return; // no fire for small gifts
+
+  const tier = coins < 200 ? 1 : coins < 500 ? 2 : 3;
+  const count = tier === 1 ? 8 : tier === 2 ? 14 : 22;
+
+  card.classList.add(`fire-t${tier}`);
+
+  const wrap = document.createElement('div');
+  wrap.className = `fire-wrap fire-t${tier}`;
+
+  const cardW = 370; // approximate card width
+
+  for (let i = 0; i < count; i++) {
+    const flame = document.createElement('div');
+    flame.className = 'flame';
+
+    // Size variation per tier
+    const sizeBase = tier === 1 ? 7  : tier === 2 ? 11 : 15;
+    const sizeVar  = tier === 1 ? 5  : tier === 2 ? 8  : 12;
+    const riseBase = tier === 1 ? 35 : tier === 2 ? 55 : 80;
+    const riseVar  = tier === 1 ? 20 : tier === 2 ? 35 : 55;
+
+    const fw    = sizeBase + Math.random() * sizeVar;
+    const fh    = fw * (1.5 + Math.random() * 0.8);
+    const frise = -(riseBase + Math.random() * riseVar);
+    const fmax  = frise * 1.4;
+    const fdur  = 0.6 + Math.random() * 0.7;
+    const fdelay = Math.random() * fdur; // stagger start so it looks continuous
+    const frot  = (Math.random() - 0.5) * 25;
+    const fblur = 0.5 + Math.random() * 1.5;
+    const left  = 4 + Math.random() * (cardW - 20);
+
+    flame.style.cssText = `
+      left: ${left}px;
+      --fw: ${fw}px;
+      --fh: ${fh}px;
+      --frise: ${frise}px;
+      --fmax: ${fmax}px;
+      --fdur: ${fdur}s;
+      --fdelay: ${fdelay}s;
+      --frot: ${frot}deg;
+      --fblur: ${fblur}px;
+    `;
+    wrap.appendChild(flame);
+  }
+
+  card.appendChild(wrap);
+}
+
+/* ─────────────────────────────────────────────
    SHOW ALERT
 ───────────────────────────────────────────── */
 function showAlert({ username, giftName, count = 1, coins }) {
@@ -616,6 +729,7 @@ function showAlert({ username, giftName, count = 1, coins }) {
   `;
 
   container.appendChild(card);
+  addFire(card, totalCoins);
   activeAlerts++;
 
   // remove after animation ends
@@ -671,12 +785,12 @@ function connectProxy() {
    TEST ALERT
 ───────────────────────────────────────────── */
 const TEST_GIFTS = [
-  { username: 'xXDragonSlayerXx', giftName: 'Rose',      count: 5  },
-  { username: 'TikTokQueen99',    giftName: 'Lion',       count: 1  },
-  { username: 'NightOwl_Stream',  giftName: 'Diamond',    count: 3  },
-  { username: 'CosmicVibes',      giftName: 'Universe',   count: 1  },
-  { username: 'PixelPrincess',    giftName: 'Heart Me',   count: 10 },
-  { username: 'ShadowKnight',     giftName: 'Crown',      count: 2  },
+  { username: 'xXDragonSlayerXx', giftName: 'Rose',        count: 5,  coins: 5     }, // no fire
+  { username: 'TikTokQueen99',    giftName: 'Heart Me',     count: 10, coins: 100   }, // 🔥 tier 1
+  { username: 'NightOwl_Stream',  giftName: 'Confetti',     count: 5,  coins: 150   }, // 🔥 tier 1
+  { username: 'PixelPrincess',    giftName: 'Crown',        count: 1,  coins: 300   }, // 🔥🔥 tier 2
+  { username: 'CosmicVibes',      giftName: 'Diamond',      count: 1,  coins: 5000  }, // 🔥🔥🔥 tier 3
+  { username: 'ShadowKnight',     giftName: 'Universe',     count: 1,  coins: 34999 }, // 🔥🔥🔥 tier 3
 ];
 let testIdx = 0;
 function testAlert() {
