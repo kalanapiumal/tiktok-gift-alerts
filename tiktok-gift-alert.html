@@ -534,6 +534,19 @@ const urlDur = params.get('dur');
 if (urlDur) document.getElementById('input-duration').value = urlDur;
 
 /* ═══════════════════════════════════════
+   DASHBOARD-OVERRIDABLE CONFIG
+═══════════════════════════════════════ */
+let MAX_VISIBLE_OVERRIDE = 3;
+let SUBTEXT_OVERRIDE     = 'sent a gift 🎁';
+let SHAKE_ENABLED        = true;
+let SOUND_ENABLED        = true;
+let SOUND_VOL            = 0.6;
+let FIRE_T1 = 100, FIRE_T2 = 200, FIRE_T3 = 500;
+let STREAK_THRESHOLDS    = [10, 25, 50, 100];
+let STREAK_LABELS        = ['🔥 ON FIRE', '💥 BLAZING', '⚡ UNSTOPPABLE', '👑 LEGENDARY'];
+const SOUND_MAP = { small:'sparkle', mid:'levelup', big:'fanfare', streak:'powerup' };
+
+/* ═══════════════════════════════════════
    GIFT DATABASE
 ═══════════════════════════════════════ */
 const GIFT_DATA = {
@@ -641,10 +654,13 @@ const SOUNDS = {
   },
 };
 function playGiftSound(coins) {
-  if      (coins<100)  SOUNDS.sparkle();
-  else if (coins<=150) SOUNDS.levelup();
-  else                 SOUNDS.fanfare();
+  if(!SOUND_ENABLED) return;
+  const vol = SOUND_VOL;
+  const id = coins<100 ? SOUND_MAP.small : coins<=150 ? SOUND_MAP.mid : SOUND_MAP.big;
+  SOUNDS[id]?.(vol);
 }
+
+// ─── Sound caller for streak start
 
 /* ═══════════════════════════════════════
    HELPERS
@@ -664,8 +680,8 @@ function dur(){ return parseFloat(document.getElementById('input-duration').valu
    FIRE EFFECT
 ═══════════════════════════════════════ */
 function addFire(card, coins) {
-  if (coins<100) return;
-  const tier = coins<200?1:coins<500?2:3;
+  if (coins<FIRE_T1) return;
+  const tier = coins<FIRE_T2?1:coins<FIRE_T3?2:3;
   const count= tier===1?9:tier===2?15:24;
   card.classList.add(`fire-t${tier}`);
   const wrap=document.createElement('div');
@@ -690,9 +706,10 @@ function addFire(card, coins) {
    Called when count hits 10 / 25 / 50 / 100+
 ═══════════════════════════════════════ */
 function fireStreakMilestone(card, count) {
-  const tier   = count>=100?'s4':count>=50?'s3':count>=25?'s2':'s1';
+  const [t1,t2,t3,t4] = STREAK_THRESHOLDS;
+  const tier   = count>=t4?'s4':count>=t3?'s3':count>=t2?'s2':'s1';
   const colors = {s1:'#ff9a3c',s2:'#ff5555',s3:'#cc44ff',s4:'#ffd700'};
-  const labels = {s1:'🔥 ON FIRE',s2:'💥 BLAZING',s3:'⚡ UNSTOPPABLE',s4:'👑 LEGENDARY'};
+  const labels = {s1:STREAK_LABELS[0],s2:STREAK_LABELS[1],s3:STREAK_LABELS[2],s4:STREAK_LABELS[3]};
   const sizes  = {s1:'42px',s2:'52px',s3:'62px',s4:'78px'};
   const emojis = {s1:'',s2:' 🔥',s3:' ⚡',s4:' 💥'};
   const c      = colors[tier];
@@ -740,7 +757,7 @@ function fireStreakMilestone(card, count) {
   }
 
   // Screen shake (s3+)
-  if(tier==='s3'||tier==='s4'){
+  if(SHAKE_ENABLED && (tier==='s3'||tier==='s4')){
     container.classList.add('shake');
     setTimeout(()=>container.classList.remove('shake'),520);
   }
@@ -755,7 +772,6 @@ function fireStreakMilestone(card, count) {
 /* ═══════════════════════════════════════
    ALERT QUEUE
 ═══════════════════════════════════════ */
-const MAX_VISIBLE = 3;
 const queue       = [];
 let   activeAlerts = 0;
 // Track live streak cards: streakKey → card element
@@ -763,7 +779,7 @@ const streakCards = new Map();
 
 function enqueue(data){ queue.push(data); processQueue(); }
 function processQueue(){
-  while(activeAlerts<MAX_VISIBLE && queue.length>0) showAlert(queue.shift());
+  while(activeAlerts<MAX_VISIBLE_OVERRIDE && queue.length>0) showAlert(queue.shift());
 }
 
 /* ═══════════════════════════════════════
@@ -781,8 +797,10 @@ function showAlert({ username, giftName, count=1, coins, pictureUrl='', streakKe
   setTimeout(()=>flash.classList.remove('active'),180);
 
   // Sound: Power Up once for streak start, normal tier sound for single gifts
-  if(streakKey) SOUNDS.powerup();
-  else          playGiftSound(total);
+  if(SOUND_ENABLED) {
+    if(streakKey) SOUNDS[SOUND_MAP.streak]?.(SOUND_VOL);
+    else          playGiftSound(total);
+  }
 
   const container=document.getElementById('alert-container');
   const card=document.createElement('div');
@@ -815,7 +833,7 @@ function showAlert({ username, giftName, count=1, coins, pictureUrl='', streakKe
     <div class="alert-body">
       <div class="alert-username">${esc(username)}</div>
       <div class="alert-gift-name">${esc(giftName)}</div>
-      <div class="alert-subtext">sent a gift 🎁</div>
+      <div class="alert-subtext">${esc(SUBTEXT_OVERRIDE)}</div>
     </div>
     <div class="alert-coins">
       <span class="coin-icon">🪙</span>
@@ -871,9 +889,10 @@ function updateStreakCard({ streakKey, count, coins, giftName }) {
   if(coinEl) coinEl.textContent=fmtCoins(total);
 
   // Fire milestone effects at key counts
-  if(count===10||count===25||count===50||count===100||count===200||count===500){
+  const [t1,t2,t3,t4] = STREAK_THRESHOLDS;
+  if(count===t1||count===t2||count===t3||count===t4||count===200||count===500){
     fireStreakMilestone(card, count);
-    playGiftSound(total);
+    if(SOUND_ENABLED) playGiftSound(total);
   }
 }
 
@@ -976,6 +995,134 @@ function testStreakLocal(){
    AUTO-CONNECT
 ═══════════════════════════════════════ */
 if(OBS_MODE && urlProxy) setTimeout(connectProxy,500);
+
+/* ═══════════════════════════════════════
+   DASHBOARD SYNC (postMessage from dashboard.html)
+═══════════════════════════════════════ */
+window.addEventListener('message', e => {
+  const msg = e.data;
+  if(!msg || !msg.type) return;
+
+  if(msg.type === 'HACKY_CFG') {
+    applyCfgFromDashboard(msg.cfg);
+  }
+  if(msg.type === 'HACKY_GIFT') {
+    const d = msg.gift;
+    enqueue({
+      username:   d.nickname   || d.uniqueId || 'Someone',
+      giftName:   d.giftName   || 'Gift',
+      count:      d.count      || 1,
+      coins:      d.coins      || null,
+      pictureUrl: d.pictureUrl || '',
+      streakKey:  d.streakKey  || '',
+    });
+  }
+  if(msg.type === 'HACKY_GIFT_UPDATE') {
+    updateStreakCard(msg.data);
+  }
+  if(msg.type === 'HACKY_GIFT_END') {
+    const d = msg.data;
+    const card = streakCards.get(d.streakKey);
+    if(card) {
+      const badge = card.querySelector('.count-badge');
+      if(badge) badge.textContent = `×${d.count}`;
+      const coinEl = card.querySelector('.coin-value');
+      if(coinEl) coinEl.textContent = fmtCoins(d.coins);
+    }
+  }
+});
+
+/* Apply config received from dashboard */
+function applyCfgFromDashboard(c) {
+  if(!c) return;
+  // Card dimensions
+  document.documentElement.style.setProperty('--dash-card-min', (c.cardWidth||460)+'px');
+  document.documentElement.style.setProperty('--dash-radius',   (c.radius||26)+'px');
+  document.documentElement.style.setProperty('--dash-blur',     (c.blur||22)+'px');
+
+  // Dynamic CSS injection
+  let style = document.getElementById('dash-style');
+  if(!style){ style=document.createElement('style'); style.id='dash-style'; document.head.appendChild(style); }
+
+  // Position map
+  const posMap = {
+    tl:'top:40px;left:40px;right:auto;bottom:auto;align-items:flex-start',
+    tc:'top:40px;left:50%;transform:translateX(-50%);right:auto;bottom:auto;align-items:center',
+    tr:'top:40px;right:40px;left:auto;bottom:auto;align-items:flex-end',
+    ml:'top:50%;left:40px;transform:translateY(-50%);right:auto;bottom:auto;align-items:flex-start',
+    mc:'top:50%;left:50%;transform:translate(-50%,-50%);right:auto;bottom:auto;align-items:center',
+    mr:'top:50%;right:40px;transform:translateY(-50%);left:auto;bottom:auto;align-items:flex-end',
+    bl:'bottom:40px;left:40px;top:auto;right:auto;align-items:flex-start',
+    bc:'bottom:40px;left:50%;transform:translateX(-50%);top:auto;right:auto;align-items:center',
+    br:'bottom:40px;right:40px;top:auto;left:auto;align-items:flex-end',
+  };
+  const pos = posMap[c.position||'tr'] || posMap['tr'];
+
+  style.textContent = `
+    #alert-container { ${pos}; }
+    .gift-alert {
+      min-width: ${c.cardWidth||460}px;
+      max-width: ${Math.round((c.cardWidth||460)*1.2)}px;
+      border-radius: ${c.radius||26}px;
+      backdrop-filter: blur(${c.blur||22}px);
+      opacity: ${(c.opacity||97)/100} !important;
+    }
+    .gift-alert::before { border-radius: ${c.radius||26}px; }
+    .gift-alert::after  { border-radius: ${c.radius||26}px; }
+    .alert-progress     { display: ${c.progressEnabled!==false?'block':'none'}; }
+    .alert-coins        { display: ${c.coinsEnabled!==false?'flex':'none'}; }
+    .particles-wrap     { display: ${c.particlesEnabled!==false?'block':'none'}; }
+    .alert-username     { font-size: ${c.usernameSize||28}px; }
+    .alert-gift-name    { font-size: ${c.giftNameSize||21}px; }
+    .alert-subtext      { display: block; }
+    .fire-wrap          { display: ${c.fireEnabled!==false?'block':'none'} !important; }
+  `;
+
+  // Duration
+  if(c.duration) {
+    const inp = document.getElementById('input-duration');
+    if(inp) inp.value = c.duration;
+  }
+
+  // Max alerts
+  if(c.maxAlerts) MAX_VISIBLE_OVERRIDE = c.maxAlerts;
+
+  // Subtext
+  if(c.subtext) SUBTEXT_OVERRIDE = c.subtext;
+
+  // Streak labels
+  if(c.labelS1) STREAK_LABELS[0] = c.labelS1;
+  if(c.labelS2) STREAK_LABELS[1] = c.labelS2;
+  if(c.labelS3) STREAK_LABELS[2] = c.labelS3;
+  if(c.labelS4) STREAK_LABELS[3] = c.labelS4;
+
+  // Streak thresholds
+  if(c.s1) STREAK_THRESHOLDS[0] = c.s1;
+  if(c.s2) STREAK_THRESHOLDS[1] = c.s2;
+  if(c.s3) STREAK_THRESHOLDS[2] = c.s3;
+  if(c.s4) STREAK_THRESHOLDS[3] = c.s4;
+
+  // Fire thresholds
+  if(c.fire1) FIRE_T1 = c.fire1;
+  if(c.fire2) FIRE_T2 = c.fire2;
+  if(c.fire3) FIRE_T3 = c.fire3;
+
+  // Sound config
+  if(c.soundEnabled !== undefined) SOUND_ENABLED = c.soundEnabled;
+  if(c.volume !== undefined) SOUND_VOL = (c.volume||60)/100;
+  if(c.soundSmall)  SOUND_MAP.small  = c.soundSmall;
+  if(c.soundMid)    SOUND_MAP.mid    = c.soundMid;
+  if(c.soundBig)    SOUND_MAP.big    = c.soundBig;
+  if(c.soundStreak) SOUND_MAP.streak = c.soundStreak;
+
+  // Shake
+  SHAKE_ENABLED = c.shakeEnabled !== false;
+}
+
+// Tell dashboard we're ready
+if(window.parent !== window) {
+  window.parent.postMessage({type:'HACKY_READY'},'*');
+}
 </script>
 </body>
 </html>
