@@ -457,6 +457,79 @@ function getGiftInfo(name) {
 }
 
 /* ─────────────────────────────────────────────
+   SOUND ENGINE  —  3 tiers, all embedded
+   < 100 coins  → Sparkle
+   100–150 coins → Level Up
+   150–500 coins → Fanfare
+   500+ coins   → Fanfare (same)
+───────────────────────────────────────────── */
+let _actx = null;
+function getACtx() {
+  if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_actx.state === 'suspended') _actx.resume();
+  return _actx;
+}
+
+const SOUNDS = {
+  // ✨ Sparkle — gentle cascade for small gifts (< 100 coins)
+  sparkle(vol = 0.55) {
+    const ctx = getACtx(), t = ctx.currentTime;
+    [0, 0.06, 0.13, 0.21, 0.30].forEach((delay, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.value = 2093 * Math.pow(1.12, i);
+      g.gain.setValueAtTime(0, t + delay);
+      g.gain.linearRampToValueAtTime(vol * 0.2, t + delay + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.28);
+      o.start(t + delay); o.stop(t + delay + 0.3);
+    });
+  },
+
+  // 🆙 Level Up — 5-note jingle for mid gifts (100–150 coins)
+  levelup(vol = 0.55) {
+    const ctx = getACtx(), t = ctx.currentTime;
+    [[523,0],[659,0.11],[784,0.22],[1047,0.33],[1319,0.46]].forEach(([freq, delay]) => {
+      ['square', 'sine'].forEach((type, j) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = type;
+        o.frequency.value = freq * (j === 1 ? 2 : 1);
+        g.gain.setValueAtTime(0, t + delay);
+        g.gain.linearRampToValueAtTime(vol * (j === 0 ? 0.12 : 0.06), t + delay + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.2);
+        o.start(t + delay); o.stop(t + delay + 0.22);
+      });
+    });
+  },
+
+  // 🎺 Fanfare — triumphant brass for big gifts (150+ coins)
+  fanfare(vol = 0.55) {
+    const ctx = getACtx(), t = ctx.currentTime;
+    [[523,0],[659,0.13],[784,0.26],[1047,0.42],[784,0.58],[1047,0.72]].forEach(([freq, delay]) => {
+      ['sawtooth', 'square'].forEach((type, j) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        const f = ctx.createBiquadFilter();
+        f.type = 'lowpass'; f.frequency.value = 2000;
+        o.connect(f); f.connect(g); g.connect(ctx.destination);
+        o.type = type;
+        o.frequency.value = freq * (j === 1 ? 1.005 : 1);
+        g.gain.setValueAtTime(0, t + delay);
+        g.gain.linearRampToValueAtTime(vol * (j === 0 ? 0.1 : 0.05), t + delay + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.22);
+        o.start(t + delay); o.stop(t + delay + 0.25);
+      });
+    });
+  },
+};
+
+function playGiftSound(coins) {
+  if      (coins < 100)  SOUNDS.sparkle();
+  else if (coins <= 150) SOUNDS.levelup();
+  else                   SOUNDS.fanfare();
+}
+
+/* ─────────────────────────────────────────────
    ALERT QUEUE  (max 3 on screen at once)
 ───────────────────────────────────────────── */
 const MAX_VISIBLE = 3;
@@ -489,6 +562,9 @@ function showAlert({ username, giftName, count = 1, coins }) {
   const flash = document.getElementById('flash');
   flash.classList.add('active');
   setTimeout(() => flash.classList.remove('active'), 180);
+
+  // 🔊 play tier sound
+  playGiftSound(totalCoins);
 
   const container = document.getElementById('alert-container');
   const card = document.createElement('div');
