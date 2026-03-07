@@ -606,6 +606,39 @@ const SOUNDS = {
       });
     });
   },
+  // ⚡ Power Up — rising synth whoosh, plays once when a streak starts
+  powerup(vol=0.6) {
+    const ctx=getACtx(), t=ctx.currentTime;
+    // Rising sweep
+    const o1=ctx.createOscillator(), g1=ctx.createGain();
+    o1.connect(g1); g1.connect(ctx.destination);
+    o1.type='sawtooth';
+    o1.frequency.setValueAtTime(180, t);
+    o1.frequency.exponentialRampToValueAtTime(1400, t+0.35);
+    g1.gain.setValueAtTime(0, t);
+    g1.gain.linearRampToValueAtTime(vol*0.18, t+0.03);
+    g1.gain.exponentialRampToValueAtTime(0.001, t+0.45);
+    o1.start(t); o1.stop(t+0.5);
+    // Punchy click at start
+    const o2=ctx.createOscillator(), g2=ctx.createGain();
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.type='square';
+    o2.frequency.setValueAtTime(80, t);
+    o2.frequency.exponentialRampToValueAtTime(600, t+0.08);
+    g2.gain.setValueAtTime(vol*0.25, t);
+    g2.gain.exponentialRampToValueAtTime(0.001, t+0.12);
+    o2.start(t); o2.stop(t+0.15);
+    // Bright shimmer on top
+    const o3=ctx.createOscillator(), g3=ctx.createGain();
+    o3.connect(g3); g3.connect(ctx.destination);
+    o3.type='sine';
+    o3.frequency.setValueAtTime(1200, t+0.1);
+    o3.frequency.exponentialRampToValueAtTime(2600, t+0.4);
+    g3.gain.setValueAtTime(0, t+0.1);
+    g3.gain.linearRampToValueAtTime(vol*0.12, t+0.18);
+    g3.gain.exponentialRampToValueAtTime(0.001, t+0.45);
+    o3.start(t+0.1); o3.stop(t+0.5);
+  },
 };
 function playGiftSound(coins) {
   if      (coins<100)  SOUNDS.sparkle();
@@ -747,7 +780,9 @@ function showAlert({ username, giftName, count=1, coins, pictureUrl='', streakKe
   flash.classList.add('active');
   setTimeout(()=>flash.classList.remove('active'),180);
 
-  playGiftSound(total);
+  // Sound: Power Up once for streak start, normal tier sound for single gifts
+  if(streakKey) SOUNDS.powerup();
+  else          playGiftSound(total);
 
   const container=document.getElementById('alert-container');
   const card=document.createElement('div');
