@@ -161,35 +161,57 @@ function connectTikTok() {
       scheduleReconnect(30000);
     });
 
+  // Dedup map: key = "uniqueId:giftId:repeatCount" → timestamp
+  // Blocks any identical event arriving within 4 seconds
+  const recentGifts = new Map();
+
   tiktok.on('gift', data => {
     /*
-      TikTok sends gift events in two scenarios:
-      1. Streakable gifts (roses, hearts etc.) — fires repeatedly during streak,
-         then fires a FINAL event with repeatEnd = true. We ONLY want the final one.
-      2. Non-streakable gifts (diamonds, lions etc.) — giftType = 1, fires ONCE
-         with repeatEnd = false/undefined. We want this one immediately.
+      DUAL PROTECTION against duplicates:
 
-      Fix: if giftType === 2 it's streakable → only fire on repeatEnd === true
-           if giftType === 1 it's non-streakable → fire immediately
-           This prevents the double-alert on roses.
+      Layer 1 — giftType check:
+        giftType === 2  → streakable (Rose, Heart etc.)  → only fire on repeatEnd = true
+        giftType !== 2  → non-streakable (Diamond, Lion) → fire immediately
+
+      Layer 2 — dedup map:
+        Key = userId + giftId + repeatCount
+        If same key seen within 4s → drop it (catches edge cases Layer 1 misses)
     */
-    const isStreakable = data.giftType === 2;
 
-    if (isStreakable && !data.repeatEnd) {
-      // Still mid-streak, skip — wait for the final event
+    const isStreakable = data.giftType === 2;
+    if (isStreakable && !data.repeatEnd) return; // mid-streak, wait for final event
+
+    // Build dedup key
+    const dedupKey = `${data.uniqueId}:${data.giftId}:${data.repeatCount || 1}`;
+    const now = Date.now();
+    const lastSeen = recentGifts.get(dedupKey);
+
+    if (lastSeen && (now - lastSeen) < 4000) {
+      console.log(`[Gift] ⛔ Duplicate blocked: ${dedupKey}`);
       return;
+    }
+
+    recentGifts.set(dedupKey, now);
+
+    // Clean up old entries every 100 gifts to avoid memory leak
+    if (recentGifts.size > 100) {
+      for (const [k, t] of recentGifts) {
+        if (now - t > 10000) recentGifts.delete(k);
+      }
     }
 
     const payload = {
       uniqueId:   data.uniqueId,
-      nickname:   data.nickname    || data.uniqueId || 'Someone',
-      giftName:   data.giftName    || 'Gift',
-      count:      data.repeatCount || 1,
+      nickname:   data.nickname      || data.uniqueId || 'Someone',
+      giftName:   data.giftName      || 'Gift',
+      giftId:     data.giftId,
+      count:      data.repeatCount   || 1,
       coins:      (data.diamondCount || 1) * (data.repeatCount || 1),
-      pictureUrl: data.giftPictureUrl || '',
-      timestamp:  Date.now(),
+      pictureUrl: data.giftPictureUrl || data.giftImageUrl || '',
+      timestamp:  now,
     };
-    console.log(`[Gift] ${payload.nickname} x${payload.count} ${payload.giftName} (streakable=${isStreakable})`);
+
+    console.log(`[Gift] ✅ ${payload.nickname} x${payload.count} "${payload.giftName}" — ${payload.coins} coins`);
     broadcast('gift', payload);
   });
 
