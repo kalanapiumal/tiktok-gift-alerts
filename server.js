@@ -161,6 +161,11 @@ app.get('/overlay', (req, res) => {
   res.sendFile(path.join(__dirname, 'tiktok-gift-alert.html'));
 });
 
+// ── Dashboard HTML
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
 // ── Static files (after all routes)
 app.use(express.static(__dirname, { index: false }));
 
