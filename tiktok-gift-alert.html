@@ -849,6 +849,7 @@
 
   <div id="flash"></div>
   <div id="alert-container"></div>
+  <div id="fire-overlay" style="position:fixed;inset:0;pointer-events:none;z-index:1001;overflow:visible;"></div>
 
   <div id="config-panel">
     <h3>🎁 @hackystreaming</h3>
@@ -1032,21 +1033,39 @@
       const tier = coins < FIRE_T2 ? 1 : coins < FIRE_T3 ? 2 : 3;
       const count = tier === 1 ? 9 : tier === 2 ? 15 : 24;
       card.classList.add(`fire-t${tier}`);
+
+      // Append to #fire-overlay (NOT the card) to escape the card's
+      // backdrop-filter / will-change compositing layer that clips overflow in OBS
+      const overlay = document.getElementById('fire-overlay');
       const wrap = document.createElement('div');
       wrap.className = `fire-wrap fire-t${tier}`;
-      const W = 500;
-      for (let i = 0; i < count; i++) {
-        const fl = document.createElement('div');
-        fl.className = 'flame';
-        const sb = tier === 1 ? 7 : tier === 2 ? 11 : 15, sv = tier === 1 ? 5 : tier === 2 ? 8 : 12;
-        const rb = tier === 1 ? 36 : tier === 2 ? 56 : 82, rv = tier === 1 ? 22 : tier === 2 ? 36 : 56;
-        const fw = sb + Math.random() * sv, fh = fw * (1.5 + Math.random() * 0.8);
-        const frise = -(rb + Math.random() * rv), fmax = frise * 1.4;
-        const fdur = 0.6 + Math.random() * 0.7, fdelay = Math.random() * fdur;
-        fl.style.cssText = `left:${4 + Math.random() * (W - 20)}px;--fw:${fw}px;--fh:${fh}px;--frise:${frise}px;--fmax:${fmax}px;--fdur:${fdur}s;--fdelay:${fdelay}s;--frot:${(Math.random() - .5) * 25}deg;--fblur:${0.5 + Math.random() * 1.5}px;`;
-        wrap.appendChild(fl);
-      }
-      card.appendChild(wrap);
+      // Will be positioned via fixed coords after layout
+      wrap.style.cssText = 'position:fixed;height:0px;pointer-events:none;overflow:visible;z-index:1001;';
+
+      // Build flames using card width once we know it (after layout)
+      requestAnimationFrame(() => {
+        const rect = card.getBoundingClientRect();
+        const W = rect.width || 460;
+        wrap.style.left = rect.left + 'px';
+        wrap.style.bottom = (window.innerHeight - rect.bottom + 2) + 'px';
+        wrap.style.width = W + 'px';
+
+        for (let i = 0; i < count; i++) {
+          const fl = document.createElement('div');
+          fl.className = 'flame';
+          const sb = tier === 1 ? 7 : tier === 2 ? 11 : 15, sv = tier === 1 ? 5 : tier === 2 ? 8 : 12;
+          const rb = tier === 1 ? 36 : tier === 2 ? 56 : 82, rv = tier === 1 ? 22 : tier === 2 ? 36 : 56;
+          const fw = sb + Math.random() * sv, fh = fw * (1.5 + Math.random() * 0.8);
+          const frise = -(rb + Math.random() * rv), fmax = frise * 1.4;
+          const fdur = 0.6 + Math.random() * 0.7, fdelay = Math.random() * fdur;
+          fl.style.cssText = `left:${4 + Math.random() * (W - 20)}px;--fw:${fw}px;--fh:${fh}px;--frise:${frise}px;--fmax:${fmax}px;--fdur:${fdur}s;--fdelay:${fdelay}s;--frot:${(Math.random() - .5) * 25}deg;--fblur:${0.5 + Math.random() * 1.5}px;`;
+          wrap.appendChild(fl);
+        }
+      });
+
+      overlay.appendChild(wrap);
+      // Store ref so it's cleaned up when the card is removed
+      card._fireWrap = wrap;
     }
 
     /* ═══════════════════════════════════════
@@ -1122,7 +1141,7 @@
     ═══════════════════════════════════════ */
     const queue = [];
     let activeAlerts = 0;
-    // Track live streak cards: streakKey → card element
+    // Track live streak cards: streakKey → { card, lastTier }
     const streakCards = new Map();
 
     function enqueue(data) { queue.push(data); processQueue(); }
@@ -1154,7 +1173,7 @@
       const card = document.createElement('div');
       card.className = 'gift-alert';
       card.style.cssText = `--c1:${info.c1};--c2:${info.c2};--c1-soft:${info.c1}55;--c1-bright:${info.c1};--hold-time:${holdMs}ms;--total-time:${d}s;`;
-      if (streakKey) { card.dataset.streakKey = streakKey; streakCards.set(streakKey, card); }
+      if (streakKey) { card.dataset.streakKey = streakKey; streakCards.set(streakKey, { card, lastTier: null }); }
 
       // Particles
       const pw = document.createElement('div');
@@ -1192,10 +1211,11 @@
 
       container.appendChild(card);
       addFire(card, total);
-      if (count >= 10) fireStreakMilestone(card, count);
+      // Streak milestone effects are fired via updateStreakCard as count grows
       activeAlerts++;
 
       setTimeout(() => {
+        if (card._fireWrap) card._fireWrap.remove();
         card.remove();
         if (streakKey) streakCards.delete(streakKey);
         activeAlerts--;
@@ -1203,12 +1223,23 @@
       }, d * 1000 + 100);
     }
 
+    /* Helper: return the streak tier string for a given count */
+    function getStreakTier(count) {
+      const [t1, t2, t3, t4] = STREAK_THRESHOLDS;
+      if (count >= t4) return 's4';
+      if (count >= t3) return 's3';
+      if (count >= t2) return 's2';
+      if (count >= t1) return 's1';
+      return null;
+    }
+
     /* ═══════════════════════════════════════
        UPDATE STREAK CARD  (live count update)
     ═══════════════════════════════════════ */
     function updateStreakCard({ streakKey, count, coins, giftName }) {
-      const card = streakCards.get(streakKey);
-      if (!card) return; // card not on screen yet
+      const entry = streakCards.get(streakKey);
+      if (!entry) return; // card not on screen yet
+      const { card } = entry;
 
       const info = getGiftInfo(giftName);
       const total = coins || (info.coins * count);
@@ -1236,9 +1267,12 @@
       const coinEl = card.querySelector('.coin-value');
       if (coinEl) coinEl.textContent = fmtCoins(total);
 
-      // Fire milestone effects at key counts
-      const [t1, t2, t3, t4] = STREAK_THRESHOLDS;
-      if (count === t1 || count === t2 || count === t3 || count === t4 || count === 200 || count === 500) {
+      // Fire milestone effects when a new tier is reached (threshold crossing, not exact match)
+      // This handles cases where a count value is skipped due to network timing
+      const newTier = getStreakTier(count);
+      if (newTier && newTier !== entry.lastTier) {
+        entry.lastTier = newTier;
+        streakCards.set(streakKey, entry);
         fireStreakMilestone(card, count);
         if (SOUND_ENABLED) playGiftSound(total);
       }
@@ -1280,6 +1314,7 @@
 
       // Streak tick → update existing card live
       evtSource.addEventListener('gift_update', e => {
+        console.log('[SSE] gift_update received:', e.data);
         try {
           const d = JSON.parse(e.data);
           updateStreakCard({
