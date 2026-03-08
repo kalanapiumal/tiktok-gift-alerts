@@ -1,17 +1,17 @@
 const express = require('express');
-const cors    = require('cors');
-const path    = require('path');
+const cors = require('cors');
+const path = require('path');
 
-const app  = express();
+const app = express();
 const PORT = process.env.PORT || 3000;
 const TIKTOK_USERNAME = process.env.TIKTOK_USERNAME || 'hackystreaming';
 
 app.use(cors({ origin: '*' }));
 
-let tiktokStatus   = 'disconnected';
-let tiktok         = null;
+let tiktokStatus = 'disconnected';
+let tiktok = null;
 let reconnectTimer = null;
-const clients      = new Set();
+const clients = new Set();
 
 function broadcast(event, data) {
   const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -81,9 +81,9 @@ async function sendStreak(){
 
 // ── SSE stream
 app.get('/events', (req, res) => {
-  res.setHeader('Content-Type',      'text/event-stream');
-  res.setHeader('Cache-Control',     'no-cache');
-  res.setHeader('Connection',        'keep-alive');
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
@@ -109,10 +109,10 @@ app.get('/status', (req, res) => {
 // ── Single test gift
 app.get('/test', (req, res) => {
   const gifts = [
-    { nickname: 'NightOwl_Stream',  giftName: 'Rose',     coins: 5,     pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png' },
-    { nickname: 'xXDragonSlayerXx', giftName: 'Lion',     coins: 29999, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/77f6ab69b0b03bda98a0a3d2bfdeb46f.png~tplv-obj.png' },
-    { nickname: 'TikTokQueen99',    giftName: 'Diamond',  coins: 5000,  pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.png' },
-    { nickname: 'CosmicVibes',      giftName: 'Universe', coins: 34999, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/e9cafce8279220ed26016a71076d6a8a.png~tplv-obj.png' },
+    { nickname: 'NightOwl_Stream', giftName: 'Rose', coins: 5, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png' },
+    { nickname: 'xXDragonSlayerXx', giftName: 'Lion', coins: 29999, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/77f6ab69b0b03bda98a0a3d2bfdeb46f.png~tplv-obj.png' },
+    { nickname: 'TikTokQueen99', giftName: 'Diamond', coins: 5000, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.png' },
+    { nickname: 'CosmicVibes', giftName: 'Universe', coins: 34999, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/e9cafce8279220ed26016a71076d6a8a.png~tplv-obj.png' },
   ];
   const g = gifts[Math.floor(Math.random() * gifts.length)];
   broadcast('gift', {
@@ -125,11 +125,11 @@ app.get('/test', (req, res) => {
 
 // ── Streak simulation: creates card then streams live updates to it
 app.get('/test-streak', (req, res) => {
-  const streakKey  = `test_${Date.now()}`;
-  const nickname   = 'StreakMaster';
-  const giftName   = 'Rose';
+  const streakKey = `test_${Date.now()}`;
+  const nickname = 'StreakMaster';
+  const giftName = 'Rose';
   const pictureUrl = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png';
-  const coinsPer   = 1;
+  const coinsPer = 1;
   const finalCount = 50;
 
   // Step 1: create the card with count=1
@@ -181,7 +181,7 @@ function connectTikTok() {
     return;
   }
 
-  if (tiktok) { try { tiktok.disconnect(); } catch (_) {} tiktok = null; }
+  if (tiktok) { try { tiktok.disconnect(); } catch (_) { } tiktok = null; }
 
   console.log(`[TikTok] Connecting to @${TIKTOK_USERNAME}...`);
   tiktokStatus = 'connecting';
@@ -230,11 +230,14 @@ function connectTikTok() {
   const recentSingles = new Map(); // dedupKey  → timestamp
 
   tiktok.on('gift', data => {
-    const now          = Date.now();
-    const isStreakable = data.giftType === 2;
-    const streakKey    = `${data.uniqueId}:${data.giftId}`;
-    const pictureUrl   = data.giftPictureUrl || data.giftImageUrl || '';
-    const count        = data.repeatCount || 1;
+    const now = Date.now();
+    const isStreakable = data.giftType === 1;   // giftType 1 = streakable (Rose, Heart, etc.)
+    const giftId = data.giftId || data.gift_id || 'unknown';
+    const streakKey = `${data.uniqueId}:${giftId}`;
+    const pictureUrl = data.giftPictureUrl || data.giftImageUrl || data.pictureUrl || '';
+    const giftName = data.giftName || data.gift_name || 'Gift';
+    const diamondCount = data.diamondCount || data.diamond_count || 1;
+    const count = data.repeatCount || data.repeat_count || 1;
 
     if (isStreakable) {
 
@@ -246,15 +249,15 @@ function connectTikTok() {
           // First event — create the card
           broadcast('gift', {
             streakKey,
-            uniqueId:  data.uniqueId,
-            nickname:  data.nickname || data.uniqueId || 'Someone',
-            giftName:  data.giftName || 'Gift',
-            count:     1,
-            coins:     data.diamondCount || 1,
+            uniqueId: data.uniqueId,
+            nickname: data.nickname || data.uniqueId || 'Someone',
+            giftName,
+            count: 1,
+            coins: diamondCount,
             pictureUrl,
-            isStreak:  true,
+            isStreak: true,
           });
-          console.log(`[Gift] 🔴 Streak START  ${data.nickname} "${data.giftName}"`);
+          console.log(`[Gift] 🔴 Streak START  ${data.nickname} "${giftName}"`);
         } else {
           // Update event — only if count moved forward
           if (count <= existing.count) return;
@@ -262,10 +265,10 @@ function connectTikTok() {
 
           broadcast('gift_update', {
             streakKey,
-            nickname:  data.nickname || data.uniqueId || 'Someone',
-            giftName:  data.giftName || 'Gift',
+            nickname: data.nickname || data.uniqueId || 'Someone',
+            giftName,
             count,
-            coins:     (data.diamondCount || 1) * count,
+            coins: diamondCount * count,
             pictureUrl,
           });
         }
@@ -274,9 +277,9 @@ function connectTikTok() {
         const timer = setTimeout(() => {
           const cur = activeStreaks.get(streakKey);
           if (cur) {
-            broadcast('gift_end', { streakKey, count: cur.count, coins: (data.diamondCount || 1) * cur.count });
+            broadcast('gift_end', { streakKey, count: cur.count, coins: diamondCount * cur.count });
             activeStreaks.delete(streakKey);
-            console.log(`[Gift] ⌛ Streak TIMEOUT "${data.giftName}" x${cur.count}`);
+            console.log(`[Gift] ⌛ Streak TIMEOUT "${giftName}" x${cur.count}`);
           }
         }, 3500);
 
@@ -291,18 +294,18 @@ function connectTikTok() {
         // Push final count update then end
         broadcast('gift_update', {
           streakKey,
-          nickname:  data.nickname || data.uniqueId || 'Someone',
-          giftName:  data.giftName || 'Gift',
+          nickname: data.nickname || data.uniqueId || 'Someone',
+          giftName,
           count,
-          coins:     (data.diamondCount || 1) * count,
+          coins: diamondCount * count,
           pictureUrl,
         });
         broadcast('gift_end', {
           streakKey,
           count,
-          coins: (data.diamondCount || 1) * count,
+          coins: diamondCount * count,
         });
-        console.log(`[Gift] ✅ Streak END  ${data.nickname} x${count} "${data.giftName}"`);
+        console.log(`[Gift] ✅ Streak END  ${data.nickname} x${count} "${giftName}"`);
       }
 
     } else {
@@ -320,16 +323,16 @@ function connectTikTok() {
       }
 
       broadcast('gift', {
-        streakKey:  '',
-        uniqueId:   data.uniqueId,
-        nickname:   data.nickname || data.uniqueId || 'Someone',
-        giftName:   data.giftName || 'Gift',
-        count:      1,
-        coins:      data.diamondCount || 1,
+        streakKey: '',
+        uniqueId: data.uniqueId,
+        nickname: data.nickname || data.uniqueId || 'Someone',
+        giftName,
+        count: 1,
+        coins: diamondCount,
         pictureUrl,
-        isStreak:   false,
+        isStreak: false,
       });
-      console.log(`[Gift] ✅ Single  ${data.nickname} "${data.giftName}" — ${data.diamondCount} coins`);
+      console.log(`[Gift] ✅ Single  ${data.nickname} "${giftName}" — ${diamondCount} coins`);
     }
   });
 

@@ -1,834 +1,1182 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>TikTok Gift Alerts</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet"/>
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TikTok Gift Alerts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-body {
-  background: transparent;
-  overflow: hidden;
-  font-family: 'DM Sans', sans-serif;
-  width: 100vw;
-  height: 100vh;
-}
+    body {
+      background: transparent;
+      overflow: hidden;
+      font-family: 'DM Sans', sans-serif;
+      width: 100vw;
+      height: 100vh;
+    }
 
-/* ─── ALERT CONTAINER ─── */
-#alert-container {
-  position: fixed;
-  top: 60px;
-  right: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 16px;
-  pointer-events: none;
-  z-index: 999;
-}
+    /* ─── ALERT CONTAINER ─── */
+    #alert-container {
+      position: fixed;
+      top: 60px;
+      right: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 16px;
+      pointer-events: none;
+      z-index: 999;
+    }
 
-/* ─── CARD ─── */
-.gift-alert {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 20px 28px 20px 20px;
-  border-radius: 26px;
-  min-width: 460px;
-  max-width: 560px;
-  opacity: 0;
-  transform: translateX(140px) scale(0.85);
-  animation: cardIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-             cardOut 0.45s ease-in forwards var(--hold-time, 4.5s);
-  will-change: transform, opacity;
-  background: linear-gradient(135deg, rgba(18,18,32,0.97), rgba(8,8,18,0.99));
-  box-shadow:
-    0 0 0 1.5px rgba(255,255,255,0.07),
-    0 16px 60px rgba(0,0,0,0.65),
-    inset 0 1px 0 rgba(255,255,255,0.08);
-  backdrop-filter: blur(22px);
-  overflow: visible; /* so flames/effects can overflow */
-}
+    /* ─── CARD ─── */
+    .gift-alert {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 20px 28px 20px 20px;
+      border-radius: 26px;
+      min-width: 460px;
+      max-width: 560px;
+      opacity: 0;
+      transform: translateX(140px) scale(0.85);
+      animation: cardIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+        cardOut 0.45s ease-in forwards var(--hold-time, 4.5s);
+      will-change: transform, opacity;
+      background: linear-gradient(135deg, rgba(18, 18, 32, 0.97), rgba(8, 8, 18, 0.99));
+      box-shadow:
+        0 0 0 1.5px rgba(255, 255, 255, 0.07),
+        0 16px 60px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(22px);
+      overflow: visible;
+      /* so flames/effects can overflow */
+    }
 
-/* Gradient border */
-.gift-alert::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 26px;
-  padding: 1.5px;
-  background: linear-gradient(135deg, var(--c1), var(--c2), var(--c1));
-  background-size: 200% 200%;
-  animation: borderSpin 2.5s linear infinite;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: 0;
-}
+    /* Gradient border */
+    .gift-alert::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 26px;
+      padding: 1.5px;
+      background: linear-gradient(135deg, var(--c1), var(--c2), var(--c1));
+      background-size: 200% 200%;
+      animation: borderSpin 2.5s linear infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-/* Ambient glow overlay */
-.gift-alert::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 26px;
-  background: radial-gradient(circle at 18% 50%, var(--c1-soft) 0%, transparent 65%);
-  pointer-events: none;
-  opacity: 0.35;
-  z-index: 0;
-}
+    /* Ambient glow overlay */
+    .gift-alert::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 26px;
+      background: radial-gradient(circle at 18% 50%, var(--c1-soft) 0%, transparent 65%);
+      pointer-events: none;
+      opacity: 0.35;
+      z-index: 0;
+    }
 
-/* ─── ICON ─── */
-.alert-icon {
-  position: relative;
-  flex-shrink: 0;
-  width: 80px;
-  height: 80px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, var(--c1), var(--c2));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 42px;
-  box-shadow: 0 6px 28px var(--c1-soft);
-  animation: iconPop 0.6s cubic-bezier(0.34, 1.7, 0.64, 1) 0.1s both;
-  z-index: 1;
-  overflow: visible;
-}
+    /* ─── ICON ─── */
+    .alert-icon {
+      position: relative;
+      flex-shrink: 0;
+      width: 80px;
+      height: 80px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, var(--c1), var(--c2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      box-shadow: 0 6px 28px var(--c1-soft);
+      animation: iconPop 0.6s cubic-bezier(0.34, 1.7, 0.64, 1) 0.1s both;
+      z-index: 1;
+      overflow: visible;
+    }
 
-.gift-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 9px;
-  border-radius: 22px;
-  display: block;
-}
+    .gift-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 9px;
+      border-radius: 22px;
+      display: block;
+    }
 
-.gift-emoji-fallback {
-  font-size: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+    .gift-emoji-fallback {
+      font-size: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-/* Count badge */
-.count-badge {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: linear-gradient(135deg, #ff2d55, #ff6b00);
-  color: #fff;
-  font-family: 'Bebas Neue', cursive;
-  font-size: 18px;
-  letter-spacing: 0.5px;
-  min-width: 32px;
-  height: 32px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 7px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.5);
-  border: 2.5px solid rgba(8,8,18,0.99);
-  z-index: 4;
-  animation: badgePop 0.4s cubic-bezier(0.34, 2.2, 0.64, 1) 0.3s both;
-  transform-origin: center;
-}
+    /* Count badge */
+    .count-badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: linear-gradient(135deg, #ff2d55, #ff6b00);
+      color: #fff;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+      min-width: 32px;
+      height: 32px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 7px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+      border: 2.5px solid rgba(8, 8, 18, 0.99);
+      z-index: 4;
+      animation: badgePop 0.4s cubic-bezier(0.34, 2.2, 0.64, 1) 0.3s both;
+      transform-origin: center;
+    }
 
-/* ─── TEXT ─── */
-.alert-body {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  z-index: 1;
-  flex: 1;
-  min-width: 0;
-}
+    /* ─── TEXT ─── */
+    .alert-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 1;
+      flex: 1;
+      min-width: 0;
+    }
 
-.alert-username {
-  font-family: 'Bebas Neue', cursive;
-  font-size: 28px;
-  letter-spacing: 1.5px;
-  color: #fff;
-  text-shadow: 0 0 20px var(--c1-soft);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1;
-}
+    .alert-username {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 28px;
+      letter-spacing: 1.5px;
+      color: #fff;
+      text-shadow: 0 0 20px var(--c1-soft);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1;
+    }
 
-.alert-gift-name {
-  font-family: 'Bebas Neue', cursive;
-  font-size: 21px;
-  letter-spacing: 1.5px;
-  background: linear-gradient(90deg, var(--c1), var(--c2));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 6px var(--c1-soft));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+    .alert-gift-name {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 21px;
+      letter-spacing: 1.5px;
+      background: linear-gradient(90deg, var(--c1), var(--c2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 6px var(--c1-soft));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-.alert-subtext {
-  font-size: 13.5px;
-  color: rgba(255,255,255,0.45);
-}
+    .alert-subtext {
+      font-size: 13.5px;
+      color: rgba(255, 255, 255, 0.45);
+    }
 
-/* ─── COINS ─── */
-.alert-coins {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255,215,0,0.12);
-  border: 1px solid rgba(255,215,0,0.25);
-  border-radius: 30px;
-  padding: 7px 16px;
-  flex-shrink: 0;
-  z-index: 1;
-  animation: coinSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s both;
-}
-.coin-icon { font-size: 17px; }
-.coin-value {
-  font-family: 'Bebas Neue', cursive;
-  font-size: 21px;
-  color: #ffd700;
-  letter-spacing: 1px;
-  text-shadow: 0 0 14px rgba(255,215,0,0.65);
-  transition: all 0.15s;
-}
+    /* ─── COINS ─── */
+    .alert-coins {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 215, 0, 0.12);
+      border: 1px solid rgba(255, 215, 0, 0.25);
+      border-radius: 30px;
+      padding: 7px 16px;
+      flex-shrink: 0;
+      z-index: 1;
+      animation: coinSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s both;
+    }
 
-/* ─── PROGRESS BAR ─── */
-.alert-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 4px;
-  border-radius: 0 0 26px 26px;
-  background: linear-gradient(90deg, var(--c1), var(--c2));
-  animation: shrink var(--total-time, 5s) linear forwards;
-  transform-origin: left;
-  width: 100%;
-  z-index: 1;
-}
+    .coin-icon {
+      font-size: 17px;
+    }
 
-/* ─── PARTICLES ─── */
-.particles-wrap {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  border-radius: 26px;
-  z-index: 0;
-}
-.particle {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0;
-  animation: floatUp var(--dur) ease-out var(--delay) infinite;
-}
+    .coin-value {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 21px;
+      color: #ffd700;
+      letter-spacing: 1px;
+      text-shadow: 0 0 14px rgba(255, 215, 0, 0.65);
+      transition: all 0.15s;
+    }
 
-/* ─── TIKTOK MARK ─── */
-.tiktok-mark {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  opacity: 0.18;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: #fff;
-  z-index: 1;
-}
+    /* ─── PROGRESS BAR ─── */
+    .alert-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      border-radius: 0 0 26px 26px;
+      background: linear-gradient(90deg, var(--c1), var(--c2));
+      animation: shrink var(--total-time, 5s) linear forwards;
+      transform-origin: left;
+      width: 100%;
+      z-index: 1;
+    }
 
-/* ════════════════════════════════════
+    /* ─── PARTICLES ─── */
+    .particles-wrap {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      border-radius: 26px;
+      z-index: 0;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0;
+      animation: floatUp var(--dur) ease-out var(--delay) infinite;
+    }
+
+    /* ─── TIKTOK MARK ─── */
+    .tiktok-mark {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      opacity: 0.18;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff;
+      z-index: 1;
+    }
+
+    /* ════════════════════════════════════
    FIRE EFFECTS
 ════════════════════════════════════ */
-.fire-wrap {
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 0;
-  pointer-events: none;
-  overflow: visible;
-  z-index: 2;
-}
+    .fire-wrap {
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 0;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 2;
+    }
 
-.flame {
-  position: absolute;
-  bottom: 0;
-  border-radius: 50% 50% 30% 30%;
-  transform-origin: bottom center;
-  animation: flameFly var(--fdur, 0.9s) ease-out var(--fdelay, 0s) infinite;
-  opacity: 0;
-  filter: blur(var(--fblur, 1px));
-}
+    .flame {
+      position: absolute;
+      bottom: 0;
+      border-radius: 50% 50% 30% 30%;
+      transform-origin: bottom center;
+      animation: flameFly var(--fdur, 0.9s) ease-out var(--fdelay, 0s) infinite;
+      opacity: 0;
+      filter: blur(var(--fblur, 1px));
+    }
 
-.fire-t1 .flame {
-  width: var(--fw, 9px); height: var(--fh, 16px);
-  background: radial-gradient(ellipse at 50% 80%, #ff6b00, #ff2d00 60%, transparent 100%);
-  box-shadow: 0 0 7px 2px rgba(255,80,0,0.5);
-}
-.fire-t2 .flame {
-  width: var(--fw, 13px); height: var(--fh, 25px);
-  background: radial-gradient(ellipse at 50% 80%, #ffe000, #ff6b00 50%, #ff2d00 80%, transparent 100%);
-  box-shadow: 0 0 12px 3px rgba(255,140,0,0.6);
-}
-.fire-t3 .flame {
-  width: var(--fw, 18px); height: var(--fh, 36px);
-  background: radial-gradient(ellipse at 50% 70%, #fff 0%, #ffe000 30%, #ff6b00 60%, #ff2d00 85%, transparent 100%);
-  box-shadow: 0 0 18px 6px rgba(255,180,0,0.7), 0 0 34px 9px rgba(255,80,0,0.35);
-}
+    .fire-t1 .flame {
+      width: var(--fw, 9px);
+      height: var(--fh, 16px);
+      background: radial-gradient(ellipse at 50% 80%, #ff6b00, #ff2d00 60%, transparent 100%);
+      box-shadow: 0 0 7px 2px rgba(255, 80, 0, 0.5);
+    }
 
-@keyframes flameFly {
-  0%   { opacity: 0;   transform: translateY(0)   scaleX(1)    rotate(var(--frot,0deg)); }
-  15%  { opacity: 0.9; }
-  60%  { opacity: 0.6; transform: translateY(var(--frise,-45px)) scaleX(0.7) rotate(calc(var(--frot,0deg)*-0.5)); }
-  100% { opacity: 0;   transform: translateY(var(--fmax,-75px))  scaleX(0.2) rotate(calc(var(--frot,0deg)*0.3)); }
-}
+    .fire-t2 .flame {
+      width: var(--fw, 13px);
+      height: var(--fh, 25px);
+      background: radial-gradient(ellipse at 50% 80%, #ffe000, #ff6b00 50%, #ff2d00 80%, transparent 100%);
+      box-shadow: 0 0 12px 3px rgba(255, 140, 0, 0.6);
+    }
 
-.gift-alert.fire-t1 { box-shadow: 0 0 0 1.5px rgba(255,255,255,0.07), 0 16px 60px rgba(0,0,0,0.65), 0 0 35px rgba(255,100,0,0.28), inset 0 1px 0 rgba(255,255,255,0.08); }
-.gift-alert.fire-t2 { box-shadow: 0 0 0 1.5px rgba(255,200,0,0.3),    0 16px 60px rgba(0,0,0,0.65), 0 0 55px rgba(255,140,0,0.42), inset 0 1px 0 rgba(255,255,255,0.1); }
-.gift-alert.fire-t3 { box-shadow: 0 0 0 2px   rgba(255,220,0,0.5),    0 16px 70px rgba(0,0,0,0.7),  0 0 90px rgba(255,180,0,0.52), inset 0 1px 0 rgba(255,255,255,0.15); }
+    .fire-t3 .flame {
+      width: var(--fw, 18px);
+      height: var(--fh, 36px);
+      background: radial-gradient(ellipse at 50% 70%, #fff 0%, #ffe000 30%, #ff6b00 60%, #ff2d00 85%, transparent 100%);
+      box-shadow: 0 0 18px 6px rgba(255, 180, 0, 0.7), 0 0 34px 9px rgba(255, 80, 0, 0.35);
+    }
 
-/* ════════════════════════════════════
+    @keyframes flameFly {
+      0% {
+        opacity: 0;
+        transform: translateY(0) scaleX(1) rotate(var(--frot, 0deg));
+      }
+
+      15% {
+        opacity: 0.9;
+      }
+
+      60% {
+        opacity: 0.6;
+        transform: translateY(var(--frise, -45px)) scaleX(0.7) rotate(calc(var(--frot, 0deg)*-0.5));
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(var(--fmax, -75px)) scaleX(0.2) rotate(calc(var(--frot, 0deg)*0.3));
+      }
+    }
+
+    .gift-alert.fire-t1 {
+      box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.07), 0 16px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(255, 100, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .gift-alert.fire-t2 {
+      box-shadow: 0 0 0 1.5px rgba(255, 200, 0, 0.3), 0 16px 60px rgba(0, 0, 0, 0.65), 0 0 55px rgba(255, 140, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .gift-alert.fire-t3 {
+      box-shadow: 0 0 0 2px rgba(255, 220, 0, 0.5), 0 16px 70px rgba(0, 0, 0, 0.7), 0 0 90px rgba(255, 180, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    /* ════════════════════════════════════
    STREAK / BOOST EFFECTS
 ════════════════════════════════════ */
 
-/* Live count bump on the card */
-@keyframes cardBump {
-  0%   { transform: scale(1); }
-  40%  { transform: scale(1.045); }
-  100% { transform: scale(1); }
-}
-.card-bump { animation: cardBump 0.22s cubic-bezier(0.34,1.7,0.64,1) !important; }
+    /* Live count bump on the card */
+    @keyframes cardBump {
+      0% {
+        transform: scale(1);
+      }
 
-/* Count badge bump */
-@keyframes badgeBump {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.6); }
-  100% { transform: scale(1); }
-}
-.badge-bump { animation: badgeBump 0.2s cubic-bezier(0.34,2,0.64,1) !important; }
+      40% {
+        transform: scale(1.045);
+      }
 
-/* Combo text flies up above card */
-.streak-combo {
-  position: absolute;
-  left: 50%;
-  top: -14px;
-  transform: translateX(-50%);
-  font-family: 'Bebas Neue', cursive;
-  font-size: var(--combo-size, 48px);
-  letter-spacing: 2px;
-  color: var(--combo-color, #ff9a3c);
-  text-shadow: 0 0 24px var(--combo-color, #ff9a3c), 0 0 48px var(--combo-color, #ff9a3c), 2px 2px 0 rgba(0,0,0,0.5);
-  z-index: 10;
-  pointer-events: none;
-  white-space: nowrap;
-  animation: comboFlyUp 1.5s cubic-bezier(0.22,1,0.36,1) forwards;
-}
-@keyframes comboFlyUp {
-  0%   { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.4); }
-  15%  { opacity: 1; transform: translateX(-50%) translateY(-12px) scale(1.35); }
-  40%  { opacity: 1; transform: translateX(-50%) translateY(-22px) scale(1.0); }
-  70%  { opacity: 1; transform: translateX(-50%) translateY(-30px) scale(1.0); }
-  100% { opacity: 0; transform: translateX(-50%) translateY(-65px) scale(0.8); }
-}
+      100% {
+        transform: scale(1);
+      }
+    }
 
-/* Milestone label */
-.streak-label {
-  position: absolute;
-  bottom: 12px;
-  right: 16px;
-  font-family: 'Bebas Neue', cursive;
-  font-size: 14px;
-  letter-spacing: 3px;
-  padding: 3px 13px;
-  border-radius: 20px;
-  z-index: 4;
-  white-space: nowrap;
-  pointer-events: none;
-  animation: labelPop 0.4s cubic-bezier(0.34,1.7,0.64,1) forwards;
-}
-.streak-label.s1 { background:rgba(255,150,0,0.22); color:#ff9a3c; border:1px solid rgba(255,150,0,0.45); }
-.streak-label.s2 { background:rgba(255,50,50,0.22);  color:#ff5555; border:1px solid rgba(255,50,50,0.45); }
-.streak-label.s3 { background:rgba(180,0,255,0.22);  color:#cc44ff; border:1px solid rgba(180,0,255,0.45); }
-.streak-label.s4 { background:rgba(255,215,0,0.22);  color:#ffd700; border:1px solid rgba(255,215,0,0.55); text-shadow: 0 0 10px #ffd700; }
-@keyframes labelPop {
-  from { opacity:0; transform:scale(0.5); }
-  to   { opacity:1; transform:scale(1); }
-}
+    .card-bump {
+      animation: cardBump 0.22s cubic-bezier(0.34, 1.7, 0.64, 1) !important;
+    }
 
-/* Shockwave ring */
-.shockwave {
-  position: absolute;
-  inset: -4px;
-  border-radius: 30px;
-  border: 3px solid var(--sw-color, #ff9a3c);
-  pointer-events: none;
-  z-index: 5;
-  animation: shockExpand var(--sw-dur, 0.7s) ease-out forwards;
-}
-@keyframes shockExpand {
-  0%   { opacity: 0.95; transform: scale(1);    filter: blur(0); }
-  100% { opacity: 0;    transform: scale(1.4);  filter: blur(3px); }
-}
+    /* Count badge bump */
+    @keyframes badgeBump {
+      0% {
+        transform: scale(1);
+      }
 
-/* Lightning bolt */
-.bolt {
-  position: absolute;
-  width: 3px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, #fff 0%, #ffe000 40%, var(--bolt-color,#ff9a3c) 100%);
-  box-shadow: 0 0 8px 2px #ffe000, 0 0 18px 4px var(--bolt-color,#ff9a3c);
-  transform-origin: top center;
-  opacity: 0;
-  animation: boltFlash var(--b-dur,0.22s) ease-out var(--b-delay,0s) forwards;
-}
-@keyframes boltFlash {
-  0%   { opacity:0;   transform:scaleY(0) rotate(var(--b-rot,0deg)); }
-  20%  { opacity:1;   transform:scaleY(1) rotate(var(--b-rot,0deg)); }
-  80%  { opacity:0.8; }
-  100% { opacity:0;   transform:scaleY(1) rotate(var(--b-rot,0deg)); }
-}
+      50% {
+        transform: scale(1.6);
+      }
 
-/* Tier glow overrides */
-.gift-alert.streak-s1 { box-shadow: 0 0 0 2px rgba(255,150,0,0.5),  0 16px 60px rgba(255,100,0,0.4),  inset 0 1px 0 rgba(255,255,255,0.1); }
-.gift-alert.streak-s2 { box-shadow: 0 0 0 2px rgba(255,50,50,0.6),   0 16px 70px rgba(255,0,0,0.45),   inset 0 1px 0 rgba(255,255,255,0.12); }
-.gift-alert.streak-s3 { box-shadow: 0 0 0 2px rgba(180,0,255,0.7),   0 16px 80px rgba(150,0,255,0.5),  inset 0 1px 0 rgba(255,255,255,0.15); animation: cardIn 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards, cardOut 0.45s ease-in forwards var(--hold-time,4.5s), pulseS3 1s ease-in-out infinite alternate; }
-.gift-alert.streak-s4 { box-shadow: 0 0 0 3px rgba(255,215,0,0.9),   0 16px 100px rgba(255,180,0,0.65), inset 0 1px 0 rgba(255,255,255,0.2); animation: cardIn 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards, cardOut 0.45s ease-in forwards var(--hold-time,4.5s), pulseS4 0.6s ease-in-out infinite alternate; }
-@keyframes pulseS3 {
-  from { box-shadow: 0 0 0 2px rgba(180,0,255,0.7),  0 16px 80px rgba(150,0,255,0.5); }
-  to   { box-shadow: 0 0 0 3px rgba(200,0,255,0.95), 0 16px 110px rgba(180,0,255,0.75); }
-}
-@keyframes pulseS4 {
-  from { box-shadow: 0 0 0 3px rgba(255,215,0,0.9),  0 16px 100px rgba(255,180,0,0.65); }
-  to   { box-shadow: 0 0 0 5px rgba(255,235,0,1.0),  0 16px 140px rgba(255,210,0,0.9); }
-}
+      100% {
+        transform: scale(1);
+      }
+    }
 
-/* Screen shake */
-@keyframes screenShake {
-  0%,100% { transform:translate(0,0) rotate(0deg); }
-  10%      { transform:translate(-5px,-2px) rotate(-0.5deg); }
-  20%      { transform:translate(5px,2px) rotate(0.5deg); }
-  30%      { transform:translate(-4px,3px) rotate(0deg); }
-  40%      { transform:translate(4px,-3px) rotate(0.3deg); }
-  50%      { transform:translate(-2px,2px) rotate(-0.2deg); }
-  70%      { transform:translate(2px,1px) rotate(0.1deg); }
-}
-#alert-container.shake { animation: screenShake 0.5s ease-in-out; }
+    .badge-bump {
+      animation: badgeBump 0.2s cubic-bezier(0.34, 2, 0.64, 1) !important;
+    }
 
-/* ════════════════════════════════════
+    /* Combo text flies up above card */
+    .streak-combo {
+      position: absolute;
+      left: 50%;
+      top: -14px;
+      transform: translateX(-50%);
+      font-family: 'Bebas Neue', cursive;
+      font-size: var(--combo-size, 48px);
+      letter-spacing: 2px;
+      color: var(--combo-color, #ff9a3c);
+      text-shadow: 0 0 24px var(--combo-color, #ff9a3c), 0 0 48px var(--combo-color, #ff9a3c), 2px 2px 0 rgba(0, 0, 0, 0.5);
+      z-index: 10;
+      pointer-events: none;
+      white-space: nowrap;
+      animation: comboFlyUp 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes comboFlyUp {
+      0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px) scale(0.4);
+      }
+
+      15% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-12px) scale(1.35);
+      }
+
+      40% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-22px) scale(1.0);
+      }
+
+      70% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-30px) scale(1.0);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-65px) scale(0.8);
+      }
+    }
+
+    /* Milestone label */
+    .streak-label {
+      position: absolute;
+      bottom: 12px;
+      right: 16px;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 14px;
+      letter-spacing: 3px;
+      padding: 3px 13px;
+      border-radius: 20px;
+      z-index: 4;
+      white-space: nowrap;
+      pointer-events: none;
+      animation: labelPop 0.4s cubic-bezier(0.34, 1.7, 0.64, 1) forwards;
+    }
+
+    .streak-label.s1 {
+      background: rgba(255, 150, 0, 0.22);
+      color: #ff9a3c;
+      border: 1px solid rgba(255, 150, 0, 0.45);
+    }
+
+    .streak-label.s2 {
+      background: rgba(255, 50, 50, 0.22);
+      color: #ff5555;
+      border: 1px solid rgba(255, 50, 50, 0.45);
+    }
+
+    .streak-label.s3 {
+      background: rgba(180, 0, 255, 0.22);
+      color: #cc44ff;
+      border: 1px solid rgba(180, 0, 255, 0.45);
+    }
+
+    .streak-label.s4 {
+      background: rgba(255, 215, 0, 0.22);
+      color: #ffd700;
+      border: 1px solid rgba(255, 215, 0, 0.55);
+      text-shadow: 0 0 10px #ffd700;
+    }
+
+    @keyframes labelPop {
+      from {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Shockwave ring */
+    .shockwave {
+      position: absolute;
+      inset: -4px;
+      border-radius: 30px;
+      border: 3px solid var(--sw-color, #ff9a3c);
+      pointer-events: none;
+      z-index: 5;
+      animation: shockExpand var(--sw-dur, 0.7s) ease-out forwards;
+    }
+
+    @keyframes shockExpand {
+      0% {
+        opacity: 0.95;
+        transform: scale(1);
+        filter: blur(0);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.4);
+        filter: blur(3px);
+      }
+    }
+
+    /* Lightning bolt */
+    .bolt {
+      position: absolute;
+      width: 3px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, #fff 0%, #ffe000 40%, var(--bolt-color, #ff9a3c) 100%);
+      box-shadow: 0 0 8px 2px #ffe000, 0 0 18px 4px var(--bolt-color, #ff9a3c);
+      transform-origin: top center;
+      opacity: 0;
+      animation: boltFlash var(--b-dur, 0.22s) ease-out var(--b-delay, 0s) forwards;
+    }
+
+    @keyframes boltFlash {
+      0% {
+        opacity: 0;
+        transform: scaleY(0) rotate(var(--b-rot, 0deg));
+      }
+
+      20% {
+        opacity: 1;
+        transform: scaleY(1) rotate(var(--b-rot, 0deg));
+      }
+
+      80% {
+        opacity: 0.8;
+      }
+
+      100% {
+        opacity: 0;
+        transform: scaleY(1) rotate(var(--b-rot, 0deg));
+      }
+    }
+
+    /* Tier glow overrides */
+    .gift-alert.streak-s1 {
+      box-shadow: 0 0 0 2px rgba(255, 150, 0, 0.5), 0 16px 60px rgba(255, 100, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .gift-alert.streak-s2 {
+      box-shadow: 0 0 0 2px rgba(255, 50, 50, 0.6), 0 16px 70px rgba(255, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .gift-alert.streak-s3 {
+      box-shadow: 0 0 0 2px rgba(180, 0, 255, 0.7), 0 16px 80px rgba(150, 0, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      animation: cardIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, cardOut 0.45s ease-in forwards var(--hold-time, 4.5s), pulseS3 1s ease-in-out infinite alternate;
+    }
+
+    .gift-alert.streak-s4 {
+      box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.9), 0 16px 100px rgba(255, 180, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      animation: cardIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, cardOut 0.45s ease-in forwards var(--hold-time, 4.5s), pulseS4 0.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseS3 {
+      from {
+        box-shadow: 0 0 0 2px rgba(180, 0, 255, 0.7), 0 16px 80px rgba(150, 0, 255, 0.5);
+      }
+
+      to {
+        box-shadow: 0 0 0 3px rgba(200, 0, 255, 0.95), 0 16px 110px rgba(180, 0, 255, 0.75);
+      }
+    }
+
+    @keyframes pulseS4 {
+      from {
+        box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.9), 0 16px 100px rgba(255, 180, 0, 0.65);
+      }
+
+      to {
+        box-shadow: 0 0 0 5px rgba(255, 235, 0, 1.0), 0 16px 140px rgba(255, 210, 0, 0.9);
+      }
+    }
+
+    /* Screen shake */
+    @keyframes screenShake {
+
+      0%,
+      100% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      10% {
+        transform: translate(-5px, -2px) rotate(-0.5deg);
+      }
+
+      20% {
+        transform: translate(5px, 2px) rotate(0.5deg);
+      }
+
+      30% {
+        transform: translate(-4px, 3px) rotate(0deg);
+      }
+
+      40% {
+        transform: translate(4px, -3px) rotate(0.3deg);
+      }
+
+      50% {
+        transform: translate(-2px, 2px) rotate(-0.2deg);
+      }
+
+      70% {
+        transform: translate(2px, 1px) rotate(0.1deg);
+      }
+    }
+
+    #alert-container.shake {
+      animation: screenShake 0.5s ease-in-out;
+    }
+
+    /* ════════════════════════════════════
    BASE KEYFRAMES
 ════════════════════════════════════ */
-@keyframes cardIn {
-  from { opacity:0; transform:translateX(140px) scale(0.85); }
-  to   { opacity:1; transform:translateX(0) scale(1); }
-}
-@keyframes cardOut {
-  0%   { opacity:1; transform:translateX(0) scale(1); }
-  80%  { opacity:0; transform:translateX(35px) scale(0.95); }
-  100% { opacity:0; transform:translateX(70px) scale(0.9); }
-}
-@keyframes borderSpin {
-  0%   { background-position:0% 50%; }
-  50%  { background-position:100% 50%; }
-  100% { background-position:0% 50%; }
-}
-@keyframes iconPop {
-  from { transform:scale(0) rotate(-20deg); }
-  to   { transform:scale(1) rotate(0deg); }
-}
-@keyframes badgePop {
-  from { transform:scale(0); }
-  to   { transform:scale(1); }
-}
-@keyframes coinSlide {
-  from { transform:translateX(22px); opacity:0; }
-  to   { transform:translateX(0);    opacity:1; }
-}
-@keyframes shrink {
-  from { transform:scaleX(1); }
-  to   { transform:scaleX(0); }
-}
-@keyframes floatUp {
-  0%   { opacity:0; transform:translateY(0) scale(1); }
-  20%  { opacity:0.7; }
-  100% { opacity:0; transform:translateY(-65px) scale(0.3); }
-}
+    @keyframes cardIn {
+      from {
+        opacity: 0;
+        transform: translateX(140px) scale(0.85);
+      }
 
-/* ─── SCREEN FLASH ─── */
-#flash {
-  position:fixed; inset:0;
-  background:radial-gradient(circle at 70% 80%, rgba(255,75,120,0.18), transparent 60%);
-  pointer-events:none; opacity:0; transition:opacity 0.08s ease; z-index:998;
-}
-#flash.active { opacity:1; }
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
 
-/* ─── CONFIG PANEL ─── */
-#config-panel {
-  position:fixed; top:16px; left:16px;
-  background:rgba(10,10,20,0.95);
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:14px; padding:18px 22px;
-  color:#fff; font-size:13px; width:290px;
-  z-index:1000; backdrop-filter:blur(16px);
-  box-shadow:0 8px 32px rgba(0,0,0,0.6);
-}
-#config-panel h3 { font-family:'Bebas Neue',cursive; font-size:20px; letter-spacing:2px; margin-bottom:14px; color:#ff2d55; }
-#config-panel label { display:block; margin-bottom:4px; color:rgba(255,255,255,0.6); font-size:11px; letter-spacing:.5px; text-transform:uppercase; }
-#config-panel input { width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:#fff; padding:8px 12px; font-size:13px; margin-bottom:12px; outline:none; font-family:'DM Sans',sans-serif; }
-#config-panel input:focus { border-color:#ff2d55; background:rgba(255,45,85,0.08); }
-#config-panel button { width:100%; padding:10px; background:linear-gradient(135deg,#ff2d55,#ff6b00); border:none; border-radius:10px; color:#fff; font-family:'Bebas Neue',cursive; font-size:17px; letter-spacing:1.5px; cursor:pointer; transition:transform .15s,box-shadow .15s; margin-bottom:8px; }
-#config-panel button:hover { transform:scale(1.02); box-shadow:0 4px 20px rgba(255,45,85,0.5); }
-#config-panel .streak-btn { background:linear-gradient(135deg,#5c35cc,#ff6b00); }
-#config-panel .connect-btn { background:linear-gradient(135deg,#0070f3,#5c35cc); margin-bottom:0; }
-#status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#555; margin-right:6px; vertical-align:middle; transition:background .3s; }
-#status-dot.connected { background:#00d26a; box-shadow:0 0 8px #00d26a; }
-#status-dot.error     { background:#ff2d55; box-shadow:0 0 8px #ff2d55; }
-#status-text { color:rgba(255,255,255,0.5); font-size:11px; }
-body.obs-mode #config-panel { display:none !important; }
-</style>
+    @keyframes cardOut {
+      0% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+
+      80% {
+        opacity: 0;
+        transform: translateX(35px) scale(0.95);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateX(70px) scale(0.9);
+      }
+    }
+
+    @keyframes borderSpin {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    @keyframes iconPop {
+      from {
+        transform: scale(0) rotate(-20deg);
+      }
+
+      to {
+        transform: scale(1) rotate(0deg);
+      }
+    }
+
+    @keyframes badgePop {
+      from {
+        transform: scale(0);
+      }
+
+      to {
+        transform: scale(1);
+      }
+    }
+
+    @keyframes coinSlide {
+      from {
+        transform: translateX(22px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes shrink {
+      from {
+        transform: scaleX(1);
+      }
+
+      to {
+        transform: scaleX(0);
+      }
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 0;
+        transform: translateY(0) scale(1);
+      }
+
+      20% {
+        opacity: 0.7;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-65px) scale(0.3);
+      }
+    }
+
+    /* ─── SCREEN FLASH ─── */
+    #flash {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 70% 80%, rgba(255, 75, 120, 0.18), transparent 60%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.08s ease;
+      z-index: 998;
+    }
+
+    #flash.active {
+      opacity: 1;
+    }
+
+    /* ─── CONFIG PANEL ─── */
+    #config-panel {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      background: rgba(10, 10, 20, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 18px 22px;
+      color: #fff;
+      font-size: 13px;
+      width: 290px;
+      z-index: 1000;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    #config-panel h3 {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 20px;
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+      color: #ff2d55;
+    }
+
+    #config-panel label {
+      display: block;
+      margin-bottom: 4px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 11px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    #config-panel input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    #config-panel input:focus {
+      border-color: #ff2d55;
+      background: rgba(255, 45, 85, 0.08);
+    }
+
+    #config-panel button {
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(135deg, #ff2d55, #ff6b00);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 17px;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      margin-bottom: 8px;
+    }
+
+    #config-panel button:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 20px rgba(255, 45, 85, 0.5);
+    }
+
+    #config-panel .streak-btn {
+      background: linear-gradient(135deg, #5c35cc, #ff6b00);
+    }
+
+    #config-panel .connect-btn {
+      background: linear-gradient(135deg, #0070f3, #5c35cc);
+      margin-bottom: 0;
+    }
+
+    #status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #555;
+      margin-right: 6px;
+      vertical-align: middle;
+      transition: background .3s;
+    }
+
+    #status-dot.connected {
+      background: #00d26a;
+      box-shadow: 0 0 8px #00d26a;
+    }
+
+    #status-dot.error {
+      background: #ff2d55;
+      box-shadow: 0 0 8px #ff2d55;
+    }
+
+    #status-text {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 11px;
+    }
+
+    body.obs-mode #config-panel {
+      display: none !important;
+    }
+  </style>
 </head>
+
 <body>
 
-<div id="flash"></div>
-<div id="alert-container"></div>
+  <div id="flash"></div>
+  <div id="alert-container"></div>
 
-<div id="config-panel">
-  <h3>🎁 @hackystreaming</h3>
+  <div id="config-panel">
+    <h3>🎁 @hackystreaming</h3>
 
-  <label>Proxy URL</label>
-  <input id="input-proxy" type="text" placeholder="https://your-proxy.railway.app" />
+    <label>Proxy URL</label>
+    <input id="input-proxy" type="text" placeholder="https://your-proxy.railway.app" />
 
-  <label>Alert Duration (seconds)</label>
-  <input id="input-duration" type="number" value="5" min="2" max="15" />
+    <label>Alert Duration (seconds)</label>
+    <input id="input-duration" type="number" value="5" min="2" max="15" />
 
-  <button onclick="testSingle()">🎭 Test Single Gift</button>
-  <button class="streak-btn" onclick="testStreakLocal()">🔥 Test Streak x50</button>
-  <button class="connect-btn" onclick="connectProxy()">▶ Connect to Railway</button>
+    <button onclick="testSingle()">🎭 Test Single Gift</button>
+    <button class="streak-btn" onclick="testStreakLocal()">🔥 Test Streak x50</button>
+    <button class="connect-btn" onclick="connectProxy()">▶ Connect to Railway</button>
 
-  <div style="margin-top:10px">
-    <span id="status-dot"></span>
-    <span id="status-text">Not connected</span>
+    <div style="margin-top:10px">
+      <span id="status-dot"></span>
+      <span id="status-text">Not connected</span>
+    </div>
   </div>
-</div>
 
-<script>
-/* ═══════════════════════════════════════
-   CONFIG
-═══════════════════════════════════════ */
-const params   = new URLSearchParams(location.search);
-const OBS_MODE = params.has('obs');
-if (OBS_MODE) document.body.classList.add('obs-mode');
-const urlProxy = params.get('proxy') || '';
-document.getElementById('input-proxy').value = urlProxy;
-const urlDur = params.get('dur');
-if (urlDur) document.getElementById('input-duration').value = urlDur;
+  <script>
+    /* ═══════════════════════════════════════
+       CONFIG
+    ═══════════════════════════════════════ */
+    const params = new URLSearchParams(location.search);
+    const OBS_MODE = params.has('obs');
+    if (OBS_MODE) document.body.classList.add('obs-mode');
+    const urlProxy = params.get('proxy') || '';
+    document.getElementById('input-proxy').value = urlProxy;
+    const urlDur = params.get('dur');
+    if (urlDur) document.getElementById('input-duration').value = urlDur;
 
-/* ═══════════════════════════════════════
-   DASHBOARD-OVERRIDABLE CONFIG
-═══════════════════════════════════════ */
-let MAX_VISIBLE_OVERRIDE = 3;
-let SUBTEXT_OVERRIDE     = 'sent a gift 🎁';
-let SHAKE_ENABLED        = true;
-let SOUND_ENABLED        = true;
-let SOUND_VOL            = 0.6;
-let FIRE_T1 = 100, FIRE_T2 = 200, FIRE_T3 = 500;
-let STREAK_THRESHOLDS    = [10, 25, 50, 100];
-let STREAK_LABELS        = ['🔥 ON FIRE', '💥 BLAZING', '⚡ UNSTOPPABLE', '👑 LEGENDARY'];
-const SOUND_MAP = { small:'sparkle', mid:'levelup', big:'fanfare', streak:'powerup' };
+    /* ═══════════════════════════════════════
+       DASHBOARD-OVERRIDABLE CONFIG
+    ═══════════════════════════════════════ */
+    let MAX_VISIBLE_OVERRIDE = 3;
+    let SUBTEXT_OVERRIDE = 'sent a gift 🎁';
+    let SHAKE_ENABLED = true;
+    let SOUND_ENABLED = true;
+    let SOUND_VOL = 0.6;
+    let FIRE_T1 = 100, FIRE_T2 = 200, FIRE_T3 = 500;
+    let STREAK_THRESHOLDS = [10, 25, 50, 100];
+    let STREAK_LABELS = ['🔥 ON FIRE', '💥 BLAZING', '⚡ UNSTOPPABLE', '👑 LEGENDARY'];
+    const SOUND_MAP = { small: 'sparkle', mid: 'levelup', big: 'fanfare', streak: 'powerup' };
 
-/* ═══════════════════════════════════════
-   GIFT DATABASE
-═══════════════════════════════════════ */
-const GIFT_DATA = {
-  'rose':         { emoji:'🌹', c1:'#ff2d55', c2:'#ff6b9d', coins:1     },
-  'finger heart': { emoji:'🤟', c1:'#ff2d55', c2:'#ff9a3c', coins:5     },
-  'tiktok':       { emoji:'🎵', c1:'#010101', c2:'#69c9d0', coins:1     },
-  'sunglasses':   { emoji:'😎', c1:'#0070f3', c2:'#00cfff', coins:5     },
-  'diamond':      { emoji:'💎', c1:'#5c35cc', c2:'#00cfff', coins:5000  },
-  'universe':     { emoji:'🌌', c1:'#5c35cc', c2:'#ff2d55', coins:34999 },
-  'lion':         { emoji:'🦁', c1:'#ff9a3c', c2:'#ffd700', coins:29999 },
-  'interstellar': { emoji:'🚀', c1:'#0a0a0f', c2:'#5c35cc', coins:9999  },
-  'heart me':     { emoji:'💖', c1:'#ff2d55', c2:'#ff6baf', coins:10    },
-  'ice cream':    { emoji:'🍦', c1:'#f7a8d8', c2:'#a8d8f7', coins:1     },
-  'balloon':      { emoji:'🎈', c1:'#ff6b00', c2:'#ffd700', coins:1     },
-  'confetti':     { emoji:'🎉', c1:'#ffd700', c2:'#ff6b00', coins:10    },
-  'star':         { emoji:'⭐', c1:'#ffd700', c2:'#ff9a3c', coins:5     },
-  'crown':        { emoji:'👑', c1:'#ffd700', c2:'#ff6b00', coins:500   },
-  'heart':        { emoji:'❤️', c1:'#ff2d55', c2:'#ff6b9d', coins:10    },
-  'galaxy':       { emoji:'🌠', c1:'#5c35cc', c2:'#69c9d0', coins:50    },
-  'default':      { emoji:'🎁', c1:'#ff2d55', c2:'#5c35cc', coins:1     },
-};
-function getGiftInfo(name) {
-  const key = (name||'').toLowerCase();
-  for (const [k,v] of Object.entries(GIFT_DATA)) if (key.includes(k)) return {...v,name};
-  return {...GIFT_DATA['default'],name};
-}
-
-/* ═══════════════════════════════════════
-   SOUND ENGINE
-═══════════════════════════════════════ */
-let _actx = null;
-function getACtx() {
-  if (!_actx) _actx = new (window.AudioContext||window.webkitAudioContext)();
-  if (_actx.state==='suspended') _actx.resume();
-  return _actx;
-}
-const SOUNDS = {
-  sparkle(vol=0.55) {
-    const ctx=getACtx(), t=ctx.currentTime;
-    [0,0.06,0.13,0.21,0.30].forEach((d,i)=>{
-      const o=ctx.createOscillator(),g=ctx.createGain();
-      o.connect(g);g.connect(ctx.destination);o.type='sine';
-      o.frequency.value=2093*Math.pow(1.12,i);
-      g.gain.setValueAtTime(0,t+d);g.gain.linearRampToValueAtTime(vol*0.2,t+d+0.008);
-      g.gain.exponentialRampToValueAtTime(0.001,t+d+0.28);o.start(t+d);o.stop(t+d+0.3);
-    });
-  },
-  levelup(vol=0.55) {
-    const ctx=getACtx(), t=ctx.currentTime;
-    [[523,0],[659,.11],[784,.22],[1047,.33],[1319,.46]].forEach(([f,d])=>{
-      ['square','sine'].forEach((type,j)=>{
-        const o=ctx.createOscillator(),g=ctx.createGain();
-        o.connect(g);g.connect(ctx.destination);o.type=type;
-        o.frequency.value=f*(j===1?2:1);
-        g.gain.setValueAtTime(0,t+d);g.gain.linearRampToValueAtTime(vol*(j===0?.12:.06),t+d+.008);
-        g.gain.exponentialRampToValueAtTime(0.001,t+d+.2);o.start(t+d);o.stop(t+d+.22);
-      });
-    });
-  },
-  fanfare(vol=0.55) {
-    const ctx=getACtx(), t=ctx.currentTime;
-    [[523,0],[659,.13],[784,.26],[1047,.42],[784,.58],[1047,.72]].forEach(([f,d])=>{
-      ['sawtooth','square'].forEach((type,j)=>{
-        const o=ctx.createOscillator(),g=ctx.createGain(),fi=ctx.createBiquadFilter();
-        fi.type='lowpass';fi.frequency.value=2000;
-        o.connect(fi);fi.connect(g);g.connect(ctx.destination);o.type=type;
-        o.frequency.value=f*(j===1?1.005:1);
-        g.gain.setValueAtTime(0,t+d);g.gain.linearRampToValueAtTime(vol*(j===0?.1:.05),t+d+.015);
-        g.gain.exponentialRampToValueAtTime(0.001,t+d+.22);o.start(t+d);o.stop(t+d+.25);
-      });
-    });
-  },
-  // ⚡ Power Up — rising synth whoosh, plays once when a streak starts
-  powerup(vol=0.6) {
-    const ctx=getACtx(), t=ctx.currentTime;
-    // Rising sweep
-    const o1=ctx.createOscillator(), g1=ctx.createGain();
-    o1.connect(g1); g1.connect(ctx.destination);
-    o1.type='sawtooth';
-    o1.frequency.setValueAtTime(180, t);
-    o1.frequency.exponentialRampToValueAtTime(1400, t+0.35);
-    g1.gain.setValueAtTime(0, t);
-    g1.gain.linearRampToValueAtTime(vol*0.18, t+0.03);
-    g1.gain.exponentialRampToValueAtTime(0.001, t+0.45);
-    o1.start(t); o1.stop(t+0.5);
-    // Punchy click at start
-    const o2=ctx.createOscillator(), g2=ctx.createGain();
-    o2.connect(g2); g2.connect(ctx.destination);
-    o2.type='square';
-    o2.frequency.setValueAtTime(80, t);
-    o2.frequency.exponentialRampToValueAtTime(600, t+0.08);
-    g2.gain.setValueAtTime(vol*0.25, t);
-    g2.gain.exponentialRampToValueAtTime(0.001, t+0.12);
-    o2.start(t); o2.stop(t+0.15);
-    // Bright shimmer on top
-    const o3=ctx.createOscillator(), g3=ctx.createGain();
-    o3.connect(g3); g3.connect(ctx.destination);
-    o3.type='sine';
-    o3.frequency.setValueAtTime(1200, t+0.1);
-    o3.frequency.exponentialRampToValueAtTime(2600, t+0.4);
-    g3.gain.setValueAtTime(0, t+0.1);
-    g3.gain.linearRampToValueAtTime(vol*0.12, t+0.18);
-    g3.gain.exponentialRampToValueAtTime(0.001, t+0.45);
-    o3.start(t+0.1); o3.stop(t+0.5);
-  },
-};
-function playGiftSound(coins) {
-  if(!SOUND_ENABLED) return;
-  const vol = SOUND_VOL;
-  const id = coins<100 ? SOUND_MAP.small : coins<=150 ? SOUND_MAP.mid : SOUND_MAP.big;
-  SOUNDS[id]?.(vol);
-}
-
-// ─── Sound caller for streak start
-
-/* ═══════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════ */
-function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function fmtCoins(n){ return n>=1000?(n/1000).toFixed(1).replace('.0','')+'K':n; }
-function setStatus(state,msg){
-  const dot=document.getElementById('status-dot');
-  dot.className='';
-  if(state==='connected')dot.classList.add('connected');
-  if(state==='error')dot.classList.add('error');
-  document.getElementById('status-text').textContent=msg;
-}
-function dur(){ return parseFloat(document.getElementById('input-duration').value)||5; }
-
-/* ═══════════════════════════════════════
-   FIRE EFFECT
-═══════════════════════════════════════ */
-function addFire(card, coins) {
-  if (coins<FIRE_T1) return;
-  const tier = coins<FIRE_T2?1:coins<FIRE_T3?2:3;
-  const count= tier===1?9:tier===2?15:24;
-  card.classList.add(`fire-t${tier}`);
-  const wrap=document.createElement('div');
-  wrap.className=`fire-wrap fire-t${tier}`;
-  const W=500;
-  for(let i=0;i<count;i++){
-    const fl=document.createElement('div');
-    fl.className='flame';
-    const sb=tier===1?7:tier===2?11:15, sv=tier===1?5:tier===2?8:12;
-    const rb=tier===1?36:tier===2?56:82, rv=tier===1?22:tier===2?36:56;
-    const fw=sb+Math.random()*sv, fh=fw*(1.5+Math.random()*0.8);
-    const frise=-(rb+Math.random()*rv), fmax=frise*1.4;
-    const fdur=0.6+Math.random()*0.7, fdelay=Math.random()*fdur;
-    fl.style.cssText=`left:${4+Math.random()*(W-20)}px;--fw:${fw}px;--fh:${fh}px;--frise:${frise}px;--fmax:${fmax}px;--fdur:${fdur}s;--fdelay:${fdelay}s;--frot:${(Math.random()-.5)*25}deg;--fblur:${0.5+Math.random()*1.5}px;`;
-    wrap.appendChild(fl);
-  }
-  card.appendChild(wrap);
-}
-
-/* ═══════════════════════════════════════
-   STREAK MILESTONE EFFECT
-   Called when count hits 10 / 25 / 50 / 100+
-═══════════════════════════════════════ */
-function fireStreakMilestone(card, count) {
-  const [t1,t2,t3,t4] = STREAK_THRESHOLDS;
-  const tier   = count>=t4?'s4':count>=t3?'s3':count>=t2?'s2':'s1';
-  const colors = {s1:'#ff9a3c',s2:'#ff5555',s3:'#cc44ff',s4:'#ffd700'};
-  const labels = {s1:STREAK_LABELS[0],s2:STREAK_LABELS[1],s3:STREAK_LABELS[2],s4:STREAK_LABELS[3]};
-  const sizes  = {s1:'42px',s2:'52px',s3:'62px',s4:'78px'};
-  const emojis = {s1:'',s2:' 🔥',s3:' ⚡',s4:' 💥'};
-  const c      = colors[tier];
-  const container = document.getElementById('alert-container');
-
-  // Remove old tier classes, add new
-  card.classList.remove('streak-s1','streak-s2','streak-s3','streak-s4');
-  card.classList.add(`streak-${tier}`);
-
-  // Remove old streak label, add fresh one
-  card.querySelectorAll('.streak-label').forEach(el=>el.remove());
-  const lbl=document.createElement('div');
-  lbl.className=`streak-label ${tier}`;
-  lbl.textContent=labels[tier];
-  card.appendChild(lbl);
-
-  // Combo fly-up
-  const combo=document.createElement('div');
-  combo.className='streak-combo';
-  combo.textContent=`×${count}${emojis[tier]}`;
-  combo.style.cssText=`--combo-size:${sizes[tier]};--combo-color:${c};`;
-  card.appendChild(combo);
-  setTimeout(()=>combo.remove(),1600);
-
-  // Shockwave rings
-  const rings=tier==='s1'?1:tier==='s2'?2:tier==='s3'?3:4;
-  for(let i=0;i<rings;i++){
-    const sw=document.createElement('div');
-    sw.className='shockwave';
-    sw.style.cssText=`--sw-color:${c};--sw-dur:${0.65+i*0.15}s;animation-delay:${i*0.13}s;`;
-    card.appendChild(sw);
-    setTimeout(()=>sw.remove(),1300);
-  }
-
-  // Lightning bolts (s2+)
-  if(tier!=='s1'){
-    const bcount=tier==='s2'?4:tier==='s3'?7:12;
-    for(let i=0;i<bcount;i++){
-      const bolt=document.createElement('div');
-      bolt.className='bolt';
-      bolt.style.cssText=`left:${5+Math.random()*90}%;top:${Math.random()>0.5?'-5px':'auto'};bottom:${Math.random()>0.5?'-5px':'auto'};height:${30+Math.random()*55}px;--bolt-color:${c};--b-dur:${0.18+Math.random()*0.18}s;--b-delay:${i*0.055}s;--b-rot:${(Math.random()-.5)*44}deg;`;
-      card.appendChild(bolt);
-      setTimeout(()=>bolt.remove(),1100);
+    /* ═══════════════════════════════════════
+       GIFT DATABASE
+    ═══════════════════════════════════════ */
+    const GIFT_DATA = {
+      'rose': { emoji: '🌹', c1: '#ff2d55', c2: '#ff6b9d', coins: 1 },
+      'finger heart': { emoji: '🤟', c1: '#ff2d55', c2: '#ff9a3c', coins: 5 },
+      'tiktok': { emoji: '🎵', c1: '#010101', c2: '#69c9d0', coins: 1 },
+      'sunglasses': { emoji: '😎', c1: '#0070f3', c2: '#00cfff', coins: 5 },
+      'diamond': { emoji: '💎', c1: '#5c35cc', c2: '#00cfff', coins: 5000 },
+      'universe': { emoji: '🌌', c1: '#5c35cc', c2: '#ff2d55', coins: 34999 },
+      'lion': { emoji: '🦁', c1: '#ff9a3c', c2: '#ffd700', coins: 29999 },
+      'interstellar': { emoji: '🚀', c1: '#0a0a0f', c2: '#5c35cc', coins: 9999 },
+      'heart me': { emoji: '💖', c1: '#ff2d55', c2: '#ff6baf', coins: 10 },
+      'ice cream': { emoji: '🍦', c1: '#f7a8d8', c2: '#a8d8f7', coins: 1 },
+      'balloon': { emoji: '🎈', c1: '#ff6b00', c2: '#ffd700', coins: 1 },
+      'confetti': { emoji: '🎉', c1: '#ffd700', c2: '#ff6b00', coins: 10 },
+      'star': { emoji: '⭐', c1: '#ffd700', c2: '#ff9a3c', coins: 5 },
+      'crown': { emoji: '👑', c1: '#ffd700', c2: '#ff6b00', coins: 500 },
+      'heart': { emoji: '❤️', c1: '#ff2d55', c2: '#ff6b9d', coins: 10 },
+      'galaxy': { emoji: '🌠', c1: '#5c35cc', c2: '#69c9d0', coins: 50 },
+      'default': { emoji: '🎁', c1: '#ff2d55', c2: '#5c35cc', coins: 1 },
+    };
+    function getGiftInfo(name) {
+      const key = (name || '').toLowerCase();
+      for (const [k, v] of Object.entries(GIFT_DATA)) if (key.includes(k)) return { ...v, name };
+      return { ...GIFT_DATA['default'], name };
     }
-  }
 
-  // Screen shake (s3+)
-  if(SHAKE_ENABLED && (tier==='s3'||tier==='s4')){
-    container.classList.add('shake');
-    setTimeout(()=>container.classList.remove('shake'),520);
-  }
+    /* ═══════════════════════════════════════
+       SOUND ENGINE
+    ═══════════════════════════════════════ */
+    let _actx = null;
+    function getACtx() {
+      if (!_actx) _actx = new (window.AudioContext || window.webkitAudioContext)();
+      if (_actx.state === 'suspended') _actx.resume();
+      return _actx;
+    }
+    const SOUNDS = {
+      sparkle(vol = 0.55) {
+        const ctx = getACtx(), t = ctx.currentTime;
+        [0, 0.06, 0.13, 0.21, 0.30].forEach((d, i) => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination); o.type = 'sine';
+          o.frequency.value = 2093 * Math.pow(1.12, i);
+          g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(vol * 0.2, t + d + 0.008);
+          g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.28); o.start(t + d); o.stop(t + d + 0.3);
+        });
+      },
+      levelup(vol = 0.55) {
+        const ctx = getACtx(), t = ctx.currentTime;
+        [[523, 0], [659, .11], [784, .22], [1047, .33], [1319, .46]].forEach(([f, d]) => {
+          ['square', 'sine'].forEach((type, j) => {
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination); o.type = type;
+            o.frequency.value = f * (j === 1 ? 2 : 1);
+            g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(vol * (j === 0 ? .12 : .06), t + d + .008);
+            g.gain.exponentialRampToValueAtTime(0.001, t + d + .2); o.start(t + d); o.stop(t + d + .22);
+          });
+        });
+      },
+      fanfare(vol = 0.55) {
+        const ctx = getACtx(), t = ctx.currentTime;
+        [[523, 0], [659, .13], [784, .26], [1047, .42], [784, .58], [1047, .72]].forEach(([f, d]) => {
+          ['sawtooth', 'square'].forEach((type, j) => {
+            const o = ctx.createOscillator(), g = ctx.createGain(), fi = ctx.createBiquadFilter();
+            fi.type = 'lowpass'; fi.frequency.value = 2000;
+            o.connect(fi); fi.connect(g); g.connect(ctx.destination); o.type = type;
+            o.frequency.value = f * (j === 1 ? 1.005 : 1);
+            g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(vol * (j === 0 ? .1 : .05), t + d + .015);
+            g.gain.exponentialRampToValueAtTime(0.001, t + d + .22); o.start(t + d); o.stop(t + d + .25);
+          });
+        });
+      },
+      // ⚡ Power Up — rising synth whoosh, plays once when a streak starts
+      powerup(vol = 0.6) {
+        const ctx = getACtx(), t = ctx.currentTime;
+        // Rising sweep
+        const o1 = ctx.createOscillator(), g1 = ctx.createGain();
+        o1.connect(g1); g1.connect(ctx.destination);
+        o1.type = 'sawtooth';
+        o1.frequency.setValueAtTime(180, t);
+        o1.frequency.exponentialRampToValueAtTime(1400, t + 0.35);
+        g1.gain.setValueAtTime(0, t);
+        g1.gain.linearRampToValueAtTime(vol * 0.18, t + 0.03);
+        g1.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+        o1.start(t); o1.stop(t + 0.5);
+        // Punchy click at start
+        const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+        o2.connect(g2); g2.connect(ctx.destination);
+        o2.type = 'square';
+        o2.frequency.setValueAtTime(80, t);
+        o2.frequency.exponentialRampToValueAtTime(600, t + 0.08);
+        g2.gain.setValueAtTime(vol * 0.25, t);
+        g2.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+        o2.start(t); o2.stop(t + 0.15);
+        // Bright shimmer on top
+        const o3 = ctx.createOscillator(), g3 = ctx.createGain();
+        o3.connect(g3); g3.connect(ctx.destination);
+        o3.type = 'sine';
+        o3.frequency.setValueAtTime(1200, t + 0.1);
+        o3.frequency.exponentialRampToValueAtTime(2600, t + 0.4);
+        g3.gain.setValueAtTime(0, t + 0.1);
+        g3.gain.linearRampToValueAtTime(vol * 0.12, t + 0.18);
+        g3.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+        o3.start(t + 0.1); o3.stop(t + 0.5);
+      },
+    };
+    function playGiftSound(coins) {
+      if (!SOUND_ENABLED) return;
+      const vol = SOUND_VOL;
+      const id = coins < 100 ? SOUND_MAP.small : coins <= 150 ? SOUND_MAP.mid : SOUND_MAP.big;
+      SOUNDS[id]?.(vol);
+    }
 
-  // Screen flash
-  const flash=document.getElementById('flash');
-  flash.style.background=`radial-gradient(circle at 75% 85%, ${c}44, transparent 60%)`;
-  flash.classList.add('active');
-  setTimeout(()=>{flash.classList.remove('active');flash.style.background='';},tier==='s4'?380:200);
-}
+    // ─── Sound caller for streak start
 
-/* ═══════════════════════════════════════
-   ALERT QUEUE
-═══════════════════════════════════════ */
-const queue       = [];
-let   activeAlerts = 0;
-// Track live streak cards: streakKey → card element
-const streakCards = new Map();
+    /* ═══════════════════════════════════════
+       HELPERS
+    ═══════════════════════════════════════ */
+    function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    function fmtCoins(n) { return n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : n; }
+    function setStatus(state, msg) {
+      const dot = document.getElementById('status-dot');
+      dot.className = '';
+      if (state === 'connected') dot.classList.add('connected');
+      if (state === 'error') dot.classList.add('error');
+      document.getElementById('status-text').textContent = msg;
+    }
+    function dur() { return parseFloat(document.getElementById('input-duration').value) || 5; }
 
-function enqueue(data){ queue.push(data); processQueue(); }
-function processQueue(){
-  while(activeAlerts<MAX_VISIBLE_OVERRIDE && queue.length>0) showAlert(queue.shift());
-}
+    /* ═══════════════════════════════════════
+       FIRE EFFECT
+    ═══════════════════════════════════════ */
+    function addFire(card, coins) {
+      if (coins < FIRE_T1) return;
+      const tier = coins < FIRE_T2 ? 1 : coins < FIRE_T3 ? 2 : 3;
+      const count = tier === 1 ? 9 : tier === 2 ? 15 : 24;
+      card.classList.add(`fire-t${tier}`);
+      const wrap = document.createElement('div');
+      wrap.className = `fire-wrap fire-t${tier}`;
+      const W = 500;
+      for (let i = 0; i < count; i++) {
+        const fl = document.createElement('div');
+        fl.className = 'flame';
+        const sb = tier === 1 ? 7 : tier === 2 ? 11 : 15, sv = tier === 1 ? 5 : tier === 2 ? 8 : 12;
+        const rb = tier === 1 ? 36 : tier === 2 ? 56 : 82, rv = tier === 1 ? 22 : tier === 2 ? 36 : 56;
+        const fw = sb + Math.random() * sv, fh = fw * (1.5 + Math.random() * 0.8);
+        const frise = -(rb + Math.random() * rv), fmax = frise * 1.4;
+        const fdur = 0.6 + Math.random() * 0.7, fdelay = Math.random() * fdur;
+        fl.style.cssText = `left:${4 + Math.random() * (W - 20)}px;--fw:${fw}px;--fh:${fh}px;--frise:${frise}px;--fmax:${fmax}px;--fdur:${fdur}s;--fdelay:${fdelay}s;--frot:${(Math.random() - .5) * 25}deg;--fblur:${0.5 + Math.random() * 1.5}px;`;
+        wrap.appendChild(fl);
+      }
+      card.appendChild(wrap);
+    }
 
-/* ═══════════════════════════════════════
-   SHOW ALERT  (creates a new card)
-═══════════════════════════════════════ */
-function showAlert({ username, giftName, count=1, coins, pictureUrl='', streakKey='' }) {
-  const d     = dur();
-  const holdMs= (d-0.45)*1000;
-  const info  = getGiftInfo(giftName);
-  const total = coins || (info.coins*count);
+    /* ═══════════════════════════════════════
+       STREAK MILESTONE EFFECT
+       Called when count hits 10 / 25 / 50 / 100+
+    ═══════════════════════════════════════ */
+    function fireStreakMilestone(card, count) {
+      const [t1, t2, t3, t4] = STREAK_THRESHOLDS;
+      const tier = count >= t4 ? 's4' : count >= t3 ? 's3' : count >= t2 ? 's2' : 's1';
+      const colors = { s1: '#ff9a3c', s2: '#ff5555', s3: '#cc44ff', s4: '#ffd700' };
+      const labels = { s1: STREAK_LABELS[0], s2: STREAK_LABELS[1], s3: STREAK_LABELS[2], s4: STREAK_LABELS[3] };
+      const sizes = { s1: '42px', s2: '52px', s3: '62px', s4: '78px' };
+      const emojis = { s1: '', s2: ' 🔥', s3: ' ⚡', s4: ' 💥' };
+      const c = colors[tier];
+      const container = document.getElementById('alert-container');
 
-  // Flash
-  const flash=document.getElementById('flash');
-  flash.classList.add('active');
-  setTimeout(()=>flash.classList.remove('active'),180);
+      // Remove old tier classes, add new
+      card.classList.remove('streak-s1', 'streak-s2', 'streak-s3', 'streak-s4');
+      card.classList.add(`streak-${tier}`);
 
-  // Sound: Power Up once for streak start, normal tier sound for single gifts
-  if(SOUND_ENABLED) {
-    if(streakKey) SOUNDS[SOUND_MAP.streak]?.(SOUND_VOL);
-    else          playGiftSound(total);
-  }
+      // Remove old streak label, add fresh one
+      card.querySelectorAll('.streak-label').forEach(el => el.remove());
+      const lbl = document.createElement('div');
+      lbl.className = `streak-label ${tier}`;
+      lbl.textContent = labels[tier];
+      card.appendChild(lbl);
 
-  const container=document.getElementById('alert-container');
-  const card=document.createElement('div');
-  card.className='gift-alert';
-  card.style.cssText=`--c1:${info.c1};--c2:${info.c2};--c1-soft:${info.c1}55;--c1-bright:${info.c1};--hold-time:${holdMs}ms;--total-time:${d}s;`;
-  if(streakKey) { card.dataset.streakKey=streakKey; streakCards.set(streakKey,card); }
+      // Combo fly-up
+      const combo = document.createElement('div');
+      combo.className = 'streak-combo';
+      combo.textContent = `×${count}${emojis[tier]}`;
+      combo.style.cssText = `--combo-size:${sizes[tier]};--combo-color:${c};`;
+      card.appendChild(combo);
+      setTimeout(() => combo.remove(), 1600);
 
-  // Particles
-  const pw=document.createElement('div');
-  pw.className='particles-wrap';
-  for(let i=0;i<11;i++){
-    const p=document.createElement('div');
-    p.className='particle';
-    const sz=3+Math.random()*5;
-    p.style.cssText=`left:${10+Math.random()*80}%;bottom:${Math.random()*40}%;--dur:${1.2+Math.random()*1.5}s;--delay:${Math.random()*1.5}s;background:${Math.random()>.5?info.c1:info.c2};width:${sz}px;height:${sz}px;`;
-    pw.appendChild(p);
-  }
-  card.appendChild(pw);
+      // Shockwave rings
+      const rings = tier === 's1' ? 1 : tier === 's2' ? 2 : tier === 's3' ? 3 : 4;
+      for (let i = 0; i < rings; i++) {
+        const sw = document.createElement('div');
+        sw.className = 'shockwave';
+        sw.style.cssText = `--sw-color:${c};--sw-dur:${0.65 + i * 0.15}s;animation-delay:${i * 0.13}s;`;
+        card.appendChild(sw);
+        setTimeout(() => sw.remove(), 1300);
+      }
 
-  const imgHtml = pictureUrl
-    ? `<img class="gift-img" src="${esc(pictureUrl)}" alt="${esc(giftName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><span class="gift-emoji-fallback" style="display:none">${info.emoji}</span>`
-    : `<span>${info.emoji}</span>`;
+      // Lightning bolts (s2+)
+      if (tier !== 's1') {
+        const bcount = tier === 's2' ? 4 : tier === 's3' ? 7 : 12;
+        for (let i = 0; i < bcount; i++) {
+          const bolt = document.createElement('div');
+          bolt.className = 'bolt';
+          bolt.style.cssText = `left:${5 + Math.random() * 90}%;top:${Math.random() > 0.5 ? '-5px' : 'auto'};bottom:${Math.random() > 0.5 ? '-5px' : 'auto'};height:${30 + Math.random() * 55}px;--bolt-color:${c};--b-dur:${0.18 + Math.random() * 0.18}s;--b-delay:${i * 0.055}s;--b-rot:${(Math.random() - .5) * 44}deg;`;
+          card.appendChild(bolt);
+          setTimeout(() => bolt.remove(), 1100);
+        }
+      }
 
-  card.innerHTML += `
+      // Screen shake (s3+)
+      if (SHAKE_ENABLED && (tier === 's3' || tier === 's4')) {
+        container.classList.add('shake');
+        setTimeout(() => container.classList.remove('shake'), 520);
+      }
+
+      // Screen flash
+      const flash = document.getElementById('flash');
+      flash.style.background = `radial-gradient(circle at 75% 85%, ${c}44, transparent 60%)`;
+      flash.classList.add('active');
+      setTimeout(() => { flash.classList.remove('active'); flash.style.background = ''; }, tier === 's4' ? 380 : 200);
+    }
+
+    /* ═══════════════════════════════════════
+       ALERT QUEUE
+    ═══════════════════════════════════════ */
+    const queue = [];
+    let activeAlerts = 0;
+    // Track live streak cards: streakKey → card element
+    const streakCards = new Map();
+
+    function enqueue(data) { queue.push(data); processQueue(); }
+    function processQueue() {
+      while (activeAlerts < MAX_VISIBLE_OVERRIDE && queue.length > 0) showAlert(queue.shift());
+    }
+
+    /* ═══════════════════════════════════════
+       SHOW ALERT  (creates a new card)
+    ═══════════════════════════════════════ */
+    function showAlert({ username, giftName, count = 1, coins, pictureUrl = '', streakKey = '' }) {
+      const d = dur();
+      const holdMs = (d - 0.45) * 1000;
+      const info = getGiftInfo(giftName);
+      const total = coins || (info.coins * count);
+
+      // Flash
+      const flash = document.getElementById('flash');
+      flash.classList.add('active');
+      setTimeout(() => flash.classList.remove('active'), 180);
+
+      // Sound: Power Up once for streak start, normal tier sound for single gifts
+      if (SOUND_ENABLED) {
+        if (streakKey) SOUNDS[SOUND_MAP.streak]?.(SOUND_VOL);
+        else playGiftSound(total);
+      }
+
+      const container = document.getElementById('alert-container');
+      const card = document.createElement('div');
+      card.className = 'gift-alert';
+      card.style.cssText = `--c1:${info.c1};--c2:${info.c2};--c1-soft:${info.c1}55;--c1-bright:${info.c1};--hold-time:${holdMs}ms;--total-time:${d}s;`;
+      if (streakKey) { card.dataset.streakKey = streakKey; streakCards.set(streakKey, card); }
+
+      // Particles
+      const pw = document.createElement('div');
+      pw.className = 'particles-wrap';
+      for (let i = 0; i < 11; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const sz = 3 + Math.random() * 5;
+        p.style.cssText = `left:${10 + Math.random() * 80}%;bottom:${Math.random() * 40}%;--dur:${1.2 + Math.random() * 1.5}s;--delay:${Math.random() * 1.5}s;background:${Math.random() > .5 ? info.c1 : info.c2};width:${sz}px;height:${sz}px;`;
+        pw.appendChild(p);
+      }
+      card.appendChild(pw);
+
+      const imgHtml = pictureUrl
+        ? `<img class="gift-img" src="${esc(pictureUrl)}" alt="${esc(giftName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><span class="gift-emoji-fallback" style="display:none">${info.emoji}</span>`
+        : `<span>${info.emoji}</span>`;
+
+      card.innerHTML += `
     <div class="tiktok-mark">TIKTOK LIVE</div>
     <div class="alert-icon">
       ${imgHtml}
-      ${count>1?`<div class="count-badge">×${count}</div>`:''}
+      ${count > 1 ? `<div class="count-badge">×${count}</div>` : ''}
     </div>
     <div class="alert-body">
       <div class="alert-username">${esc(username)}</div>
@@ -842,287 +1190,295 @@ function showAlert({ username, giftName, count=1, coins, pictureUrl='', streakKe
     <div class="alert-progress"></div>
   `;
 
-  container.appendChild(card);
-  addFire(card, total);
-  if(count>=10) fireStreakMilestone(card, count);
-  activeAlerts++;
+      container.appendChild(card);
+      addFire(card, total);
+      if (count >= 10) fireStreakMilestone(card, count);
+      activeAlerts++;
 
-  setTimeout(()=>{
-    card.remove();
-    if(streakKey) streakCards.delete(streakKey);
-    activeAlerts--;
-    processQueue();
-  }, d*1000+100);
-}
-
-/* ═══════════════════════════════════════
-   UPDATE STREAK CARD  (live count update)
-═══════════════════════════════════════ */
-function updateStreakCard({ streakKey, count, coins, giftName }) {
-  const card = streakCards.get(streakKey);
-  if(!card) return; // card not on screen yet
-
-  const info  = getGiftInfo(giftName);
-  const total = coins || (info.coins*count);
-
-  // Update or create count badge
-  let badge = card.querySelector('.count-badge');
-  if(badge){
-    badge.textContent=`×${count}`;
-  } else if(count>1){
-    badge=document.createElement('div');
-    badge.className='count-badge';
-    badge.textContent=`×${count}`;
-    const icon=card.querySelector('.alert-icon');
-    if(icon) icon.appendChild(badge);
-  }
-
-  // Bump badge animation
-  if(badge){
-    badge.style.animation='none';
-    void badge.offsetWidth;
-    badge.style.animation='badgeBump 0.2s cubic-bezier(0.34,2,0.64,1)';
-  }
-
-  // Update coin value
-  const coinEl=card.querySelector('.coin-value');
-  if(coinEl) coinEl.textContent=fmtCoins(total);
-
-  // Fire milestone effects at key counts
-  const [t1,t2,t3,t4] = STREAK_THRESHOLDS;
-  if(count===t1||count===t2||count===t3||count===t4||count===200||count===500){
-    fireStreakMilestone(card, count);
-    if(SOUND_ENABLED) playGiftSound(total);
-  }
-}
-
-/* ═══════════════════════════════════════
-   SSE CONNECTION
-═══════════════════════════════════════ */
-let evtSource=null;
-
-function connectProxy(){
-  const base=document.getElementById('input-proxy').value.trim().replace(/\/$/,'');
-  if(!base){setStatus('error','Enter your proxy URL first');return;}
-  if(evtSource){evtSource.close();evtSource=null;}
-  setStatus('connecting','Connecting…');
-  evtSource=new EventSource(`${base}/events`);
-
-  evtSource.addEventListener('connected',()=>setStatus('connected','@hackystreaming • Live 🔴'));
-  evtSource.addEventListener('offline',  ()=>setStatus('error','Not live yet — waiting…'));
-
-  // New gift → create card
-  evtSource.addEventListener('gift', e=>{
-    try{
-      const d=JSON.parse(e.data);
-      enqueue({
-        username:   d.nickname   || d.uniqueId || 'Someone',
-        giftName:   d.giftName   || 'Gift',
-        count:      d.count      || 1,
-        coins:      d.coins      || null,
-        pictureUrl: d.pictureUrl || '',
-        streakKey:  d.streakKey  || '',
-      });
-    }catch(err){console.warn('[SSE] gift parse error',err);}
-  });
-
-  // Streak tick → update existing card live
-  evtSource.addEventListener('gift_update', e=>{
-    try{
-      const d=JSON.parse(e.data);
-      updateStreakCard({
-        streakKey: d.streakKey,
-        count:     d.count,
-        coins:     d.coins,
-        giftName:  d.giftName || 'Gift',
-      });
-    }catch(err){console.warn('[SSE] gift_update parse error',err);}
-  });
-
-  // Streak ended — just a signal, card already updating via gift_update
-  evtSource.addEventListener('gift_end', e=>{
-    try{
-      const d=JSON.parse(e.data);
-      const card=streakCards.get(d.streakKey);
-      if(card && d.count>=10){
-        // Make sure final count is shown
-        const badge=card.querySelector('.count-badge');
-        if(badge) badge.textContent=`×${d.count}`;
-        const coinEl=card.querySelector('.coin-value');
-        if(coinEl) coinEl.textContent=fmtCoins(d.coins);
-      }
-    }catch(err){console.warn('[SSE] gift_end parse error',err);}
-  });
-
-  evtSource.onerror=()=>setStatus('error','Connection lost — retrying…');
-}
-
-/* ═══════════════════════════════════════
-   LOCAL TEST BUTTONS
-═══════════════════════════════════════ */
-const SINGLE_GIFTS = [
-  {username:'NightOwl',   giftName:'Rose',     count:1,   coins:5,     pictureUrl:'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png'},
-  {username:'CosmicVibes',giftName:'Diamond',  count:1,   coins:5000,  pictureUrl:'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.png'},
-  {username:'PixelPrince', giftName:'Lion',    count:1,   coins:29999, pictureUrl:'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/77f6ab69b0b03bda98a0a3d2bfdeb46f.png~tplv-obj.png'},
-  {username:'TikTokQueen',giftName:'Universe', count:1,   coins:34999, pictureUrl:'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/e9cafce8279220ed26016a71076d6a8a.png~tplv-obj.png'},
-];
-let singleIdx=0;
-function testSingle(){
-  const g=SINGLE_GIFTS[singleIdx++ % SINGLE_GIFTS.length];
-  enqueue({...g, streakKey:''});
-}
-
-// Simulate a live streak locally (no server needed)
-function testStreakLocal(){
-  const streakKey=`local_${Date.now()}`;
-  const giftName='Rose';
-  const pictureUrl='https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png';
-  const finalCount=50;
-
-  // Step 1: create card with count=1
-  enqueue({ username:'StreakMaster', giftName, count:1, coins:1, pictureUrl, streakKey });
-
-  // Step 2: stream updates every 80ms
-  let step=2;
-  const iv=setInterval(()=>{
-    if(step>finalCount){ clearInterval(iv); return; }
-    updateStreakCard({ streakKey, count:step, coins:step, giftName });
-    step++;
-  },80);
-}
-
-/* ═══════════════════════════════════════
-   AUTO-CONNECT
-═══════════════════════════════════════ */
-if(OBS_MODE && urlProxy) setTimeout(connectProxy,500);
-
-/* ═══════════════════════════════════════
-   DASHBOARD SYNC (postMessage from dashboard.html)
-═══════════════════════════════════════ */
-window.addEventListener('message', e => {
-  const msg = e.data;
-  if(!msg || !msg.type) return;
-
-  if(msg.type === 'HACKY_CFG') {
-    applyCfgFromDashboard(msg.cfg);
-  }
-  if(msg.type === 'HACKY_GIFT') {
-    const d = msg.gift;
-    enqueue({
-      username:   d.nickname   || d.uniqueId || 'Someone',
-      giftName:   d.giftName   || 'Gift',
-      count:      d.count      || 1,
-      coins:      d.coins      || null,
-      pictureUrl: d.pictureUrl || '',
-      streakKey:  d.streakKey  || '',
-    });
-  }
-  if(msg.type === 'HACKY_GIFT_UPDATE') {
-    updateStreakCard(msg.data);
-  }
-  if(msg.type === 'HACKY_GIFT_END') {
-    const d = msg.data;
-    const card = streakCards.get(d.streakKey);
-    if(card) {
-      const badge = card.querySelector('.count-badge');
-      if(badge) badge.textContent = `×${d.count}`;
-      const coinEl = card.querySelector('.coin-value');
-      if(coinEl) coinEl.textContent = fmtCoins(d.coins);
+      setTimeout(() => {
+        card.remove();
+        if (streakKey) streakCards.delete(streakKey);
+        activeAlerts--;
+        processQueue();
+      }, d * 1000 + 100);
     }
-  }
-});
 
-/* Apply config received from dashboard */
-function applyCfgFromDashboard(c) {
-  if(!c) return;
-  // Card dimensions
-  document.documentElement.style.setProperty('--dash-card-min', (c.cardWidth||460)+'px');
-  document.documentElement.style.setProperty('--dash-radius',   (c.radius||26)+'px');
-  document.documentElement.style.setProperty('--dash-blur',     (c.blur||22)+'px');
+    /* ═══════════════════════════════════════
+       UPDATE STREAK CARD  (live count update)
+    ═══════════════════════════════════════ */
+    function updateStreakCard({ streakKey, count, coins, giftName }) {
+      const card = streakCards.get(streakKey);
+      if (!card) return; // card not on screen yet
 
-  // Dynamic CSS injection
-  let style = document.getElementById('dash-style');
-  if(!style){ style=document.createElement('style'); style.id='dash-style'; document.head.appendChild(style); }
+      const info = getGiftInfo(giftName);
+      const total = coins || (info.coins * count);
 
-  // Position map
-  const posMap = {
-    tl:'top:40px;left:40px;right:auto;bottom:auto;align-items:flex-start',
-    tc:'top:40px;left:50%;transform:translateX(-50%);right:auto;bottom:auto;align-items:center',
-    tr:'top:40px;right:40px;left:auto;bottom:auto;align-items:flex-end',
-    ml:'top:50%;left:40px;transform:translateY(-50%);right:auto;bottom:auto;align-items:flex-start',
-    mc:'top:50%;left:50%;transform:translate(-50%,-50%);right:auto;bottom:auto;align-items:center',
-    mr:'top:50%;right:40px;transform:translateY(-50%);left:auto;bottom:auto;align-items:flex-end',
-    bl:'bottom:40px;left:40px;top:auto;right:auto;align-items:flex-start',
-    bc:'bottom:40px;left:50%;transform:translateX(-50%);top:auto;right:auto;align-items:center',
-    br:'bottom:40px;right:40px;top:auto;left:auto;align-items:flex-end',
-  };
-  const pos = posMap[c.position||'tr'] || posMap['tr'];
+      // Update or create count badge
+      let badge = card.querySelector('.count-badge');
+      if (badge) {
+        badge.textContent = `×${count}`;
+      } else if (count > 1) {
+        badge = document.createElement('div');
+        badge.className = 'count-badge';
+        badge.textContent = `×${count}`;
+        const icon = card.querySelector('.alert-icon');
+        if (icon) icon.appendChild(badge);
+      }
 
-  style.textContent = `
+      // Bump badge animation
+      if (badge) {
+        badge.style.animation = 'none';
+        void badge.offsetWidth;
+        badge.style.animation = 'badgeBump 0.2s cubic-bezier(0.34,2,0.64,1)';
+      }
+
+      // Update coin value
+      const coinEl = card.querySelector('.coin-value');
+      if (coinEl) coinEl.textContent = fmtCoins(total);
+
+      // Fire milestone effects at key counts
+      const [t1, t2, t3, t4] = STREAK_THRESHOLDS;
+      if (count === t1 || count === t2 || count === t3 || count === t4 || count === 200 || count === 500) {
+        fireStreakMilestone(card, count);
+        if (SOUND_ENABLED) playGiftSound(total);
+      }
+    }
+
+    /* ═══════════════════════════════════════
+       SSE CONNECTION
+    ═══════════════════════════════════════ */
+    let evtSource = null;
+
+    function connectProxy() {
+      // Default to same origin (works when OBS loads this page directly from the Express server)
+      const inputVal = document.getElementById('input-proxy').value.trim().replace(/\/$/, '');
+      const base = inputVal || window.location.origin;
+      if (!base) { setStatus('error', 'Enter your proxy URL first'); return; }
+      if (evtSource) { evtSource.close(); evtSource = null; }
+      setStatus('connecting', 'Connecting…');
+      console.log('[SSE] Connecting to:', base + '/events');
+      evtSource = new EventSource(`${base}/events`);
+
+      evtSource.addEventListener('connected', e => { console.log('[SSE] TikTok connected', e.data); setStatus('connected', '@hackystreaming • Live 🔴'); });
+      evtSource.addEventListener('offline', e => { console.log('[SSE] TikTok offline', e.data); setStatus('error', 'Not live yet — waiting…'); });
+
+      // New gift → create card
+      evtSource.addEventListener('gift', e => {
+        console.log('[SSE] gift received:', e.data);
+        try {
+          const d = JSON.parse(e.data);
+          enqueue({
+            username: d.nickname || d.uniqueId || 'Someone',
+            giftName: d.giftName || 'Gift',
+            count: d.count || 1,
+            coins: d.coins || null,
+            pictureUrl: d.pictureUrl || '',
+            streakKey: d.streakKey || '',
+          });
+        } catch (err) { console.warn('[SSE] gift parse error', err); }
+      });
+
+      // Streak tick → update existing card live
+      evtSource.addEventListener('gift_update', e => {
+        try {
+          const d = JSON.parse(e.data);
+          updateStreakCard({
+            streakKey: d.streakKey,
+            count: d.count,
+            coins: d.coins,
+            giftName: d.giftName || 'Gift',
+          });
+        } catch (err) { console.warn('[SSE] gift_update parse error', err); }
+      });
+
+      // Streak ended — just a signal, card already updating via gift_update
+      evtSource.addEventListener('gift_end', e => {
+        try {
+          const d = JSON.parse(e.data);
+          const card = streakCards.get(d.streakKey);
+          if (card && d.count >= 10) {
+            // Make sure final count is shown
+            const badge = card.querySelector('.count-badge');
+            if (badge) badge.textContent = `×${d.count}`;
+            const coinEl = card.querySelector('.coin-value');
+            if (coinEl) coinEl.textContent = fmtCoins(d.coins);
+          }
+        } catch (err) { console.warn('[SSE] gift_end parse error', err); }
+      });
+
+      evtSource.onerror = (err) => { console.error('[SSE] Connection error:', err); setStatus('error', 'Connection lost — retrying…'); };
+    }
+
+    /* ═══════════════════════════════════════
+       LOCAL TEST BUTTONS
+    ═══════════════════════════════════════ */
+    const SINGLE_GIFTS = [
+      { username: 'NightOwl', giftName: 'Rose', count: 1, coins: 5, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png' },
+      { username: 'CosmicVibes', giftName: 'Diamond', count: 1, coins: 5000, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.png' },
+      { username: 'PixelPrince', giftName: 'Lion', count: 1, coins: 29999, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/77f6ab69b0b03bda98a0a3d2bfdeb46f.png~tplv-obj.png' },
+      { username: 'TikTokQueen', giftName: 'Universe', count: 1, coins: 34999, pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/e9cafce8279220ed26016a71076d6a8a.png~tplv-obj.png' },
+    ];
+    let singleIdx = 0;
+    function testSingle() {
+      const g = SINGLE_GIFTS[singleIdx++ % SINGLE_GIFTS.length];
+      enqueue({ ...g, streakKey: '' });
+    }
+
+    // Simulate a live streak locally (no server needed)
+    function testStreakLocal() {
+      const streakKey = `local_${Date.now()}`;
+      const giftName = 'Rose';
+      const pictureUrl = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png';
+      const finalCount = 50;
+
+      // Step 1: create card with count=1
+      enqueue({ username: 'StreakMaster', giftName, count: 1, coins: 1, pictureUrl, streakKey });
+
+      // Step 2: stream updates every 80ms
+      let step = 2;
+      const iv = setInterval(() => {
+        if (step > finalCount) { clearInterval(iv); return; }
+        updateStreakCard({ streakKey, count: step, coins: step, giftName });
+        step++;
+      }, 80);
+    }
+
+    /* ═══════════════════════════════════════
+       AUTO-CONNECT
+    ═══════════════════════════════════════ */
+    // Auto-connect in OBS mode (with or without explicit proxy URL — defaults to same origin)
+    if (OBS_MODE) setTimeout(connectProxy, 500);
+    // Also auto-connect when served from same origin without OBS mode (e.g. direct /overlay visit)
+    else if (!urlProxy && window.location.port) setTimeout(connectProxy, 500);
+
+    /* ═══════════════════════════════════════
+       DASHBOARD SYNC (postMessage from dashboard.html)
+    ═══════════════════════════════════════ */
+    window.addEventListener('message', e => {
+      const msg = e.data;
+      if (!msg || !msg.type) return;
+
+      if (msg.type === 'HACKY_CFG') {
+        applyCfgFromDashboard(msg.cfg);
+      }
+      if (msg.type === 'HACKY_GIFT') {
+        const d = msg.gift;
+        enqueue({
+          username: d.nickname || d.uniqueId || 'Someone',
+          giftName: d.giftName || 'Gift',
+          count: d.count || 1,
+          coins: d.coins || null,
+          pictureUrl: d.pictureUrl || '',
+          streakKey: d.streakKey || '',
+        });
+      }
+      if (msg.type === 'HACKY_GIFT_UPDATE') {
+        updateStreakCard(msg.data);
+      }
+      if (msg.type === 'HACKY_GIFT_END') {
+        const d = msg.data;
+        const card = streakCards.get(d.streakKey);
+        if (card) {
+          const badge = card.querySelector('.count-badge');
+          if (badge) badge.textContent = `×${d.count}`;
+          const coinEl = card.querySelector('.coin-value');
+          if (coinEl) coinEl.textContent = fmtCoins(d.coins);
+        }
+      }
+    });
+
+    /* Apply config received from dashboard */
+    function applyCfgFromDashboard(c) {
+      if (!c) return;
+      // Card dimensions
+      document.documentElement.style.setProperty('--dash-card-min', (c.cardWidth || 460) + 'px');
+      document.documentElement.style.setProperty('--dash-radius', (c.radius || 26) + 'px');
+      document.documentElement.style.setProperty('--dash-blur', (c.blur || 22) + 'px');
+
+      // Dynamic CSS injection
+      let style = document.getElementById('dash-style');
+      if (!style) { style = document.createElement('style'); style.id = 'dash-style'; document.head.appendChild(style); }
+
+      // Position map
+      const posMap = {
+        tl: 'top:40px;left:40px;right:auto;bottom:auto;align-items:flex-start',
+        tc: 'top:40px;left:50%;transform:translateX(-50%);right:auto;bottom:auto;align-items:center',
+        tr: 'top:40px;right:40px;left:auto;bottom:auto;align-items:flex-end',
+        ml: 'top:50%;left:40px;transform:translateY(-50%);right:auto;bottom:auto;align-items:flex-start',
+        mc: 'top:50%;left:50%;transform:translate(-50%,-50%);right:auto;bottom:auto;align-items:center',
+        mr: 'top:50%;right:40px;transform:translateY(-50%);left:auto;bottom:auto;align-items:flex-end',
+        bl: 'bottom:40px;left:40px;top:auto;right:auto;align-items:flex-start',
+        bc: 'bottom:40px;left:50%;transform:translateX(-50%);top:auto;right:auto;align-items:center',
+        br: 'bottom:40px;right:40px;top:auto;left:auto;align-items:flex-end',
+      };
+      const pos = posMap[c.position || 'tr'] || posMap['tr'];
+
+      style.textContent = `
     #alert-container { ${pos}; }
     .gift-alert {
-      min-width: ${c.cardWidth||460}px;
-      max-width: ${Math.round((c.cardWidth||460)*1.2)}px;
-      border-radius: ${c.radius||26}px;
-      backdrop-filter: blur(${c.blur||22}px);
-      opacity: ${(c.opacity||97)/100} !important;
+      min-width: ${c.cardWidth || 460}px;
+      max-width: ${Math.round((c.cardWidth || 460) * 1.2)}px;
+      border-radius: ${c.radius || 26}px;
+      backdrop-filter: blur(${c.blur || 22}px);
+      opacity: ${(c.opacity || 97) / 100} !important;
     }
-    .gift-alert::before { border-radius: ${c.radius||26}px; }
-    .gift-alert::after  { border-radius: ${c.radius||26}px; }
-    .alert-progress     { display: ${c.progressEnabled!==false?'block':'none'}; }
-    .alert-coins        { display: ${c.coinsEnabled!==false?'flex':'none'}; }
-    .particles-wrap     { display: ${c.particlesEnabled!==false?'block':'none'}; }
-    .alert-username     { font-size: ${c.usernameSize||28}px; }
-    .alert-gift-name    { font-size: ${c.giftNameSize||21}px; }
+    .gift-alert::before { border-radius: ${c.radius || 26}px; }
+    .gift-alert::after  { border-radius: ${c.radius || 26}px; }
+    .alert-progress     { display: ${c.progressEnabled !== false ? 'block' : 'none'}; }
+    .alert-coins        { display: ${c.coinsEnabled !== false ? 'flex' : 'none'}; }
+    .particles-wrap     { display: ${c.particlesEnabled !== false ? 'block' : 'none'}; }
+    .alert-username     { font-size: ${c.usernameSize || 28}px; }
+    .alert-gift-name    { font-size: ${c.giftNameSize || 21}px; }
     .alert-subtext      { display: block; }
-    .fire-wrap          { display: ${c.fireEnabled!==false?'block':'none'} !important; }
+    .fire-wrap          { display: ${c.fireEnabled !== false ? 'block' : 'none'} !important; }
   `;
 
-  // Duration
-  if(c.duration) {
-    const inp = document.getElementById('input-duration');
-    if(inp) inp.value = c.duration;
-  }
+      // Duration
+      if (c.duration) {
+        const inp = document.getElementById('input-duration');
+        if (inp) inp.value = c.duration;
+      }
 
-  // Max alerts
-  if(c.maxAlerts) MAX_VISIBLE_OVERRIDE = c.maxAlerts;
+      // Max alerts
+      if (c.maxAlerts) MAX_VISIBLE_OVERRIDE = c.maxAlerts;
 
-  // Subtext
-  if(c.subtext) SUBTEXT_OVERRIDE = c.subtext;
+      // Subtext
+      if (c.subtext) SUBTEXT_OVERRIDE = c.subtext;
 
-  // Streak labels
-  if(c.labelS1) STREAK_LABELS[0] = c.labelS1;
-  if(c.labelS2) STREAK_LABELS[1] = c.labelS2;
-  if(c.labelS3) STREAK_LABELS[2] = c.labelS3;
-  if(c.labelS4) STREAK_LABELS[3] = c.labelS4;
+      // Streak labels
+      if (c.labelS1) STREAK_LABELS[0] = c.labelS1;
+      if (c.labelS2) STREAK_LABELS[1] = c.labelS2;
+      if (c.labelS3) STREAK_LABELS[2] = c.labelS3;
+      if (c.labelS4) STREAK_LABELS[3] = c.labelS4;
 
-  // Streak thresholds
-  if(c.s1) STREAK_THRESHOLDS[0] = c.s1;
-  if(c.s2) STREAK_THRESHOLDS[1] = c.s2;
-  if(c.s3) STREAK_THRESHOLDS[2] = c.s3;
-  if(c.s4) STREAK_THRESHOLDS[3] = c.s4;
+      // Streak thresholds
+      if (c.s1) STREAK_THRESHOLDS[0] = c.s1;
+      if (c.s2) STREAK_THRESHOLDS[1] = c.s2;
+      if (c.s3) STREAK_THRESHOLDS[2] = c.s3;
+      if (c.s4) STREAK_THRESHOLDS[3] = c.s4;
 
-  // Fire thresholds
-  if(c.fire1) FIRE_T1 = c.fire1;
-  if(c.fire2) FIRE_T2 = c.fire2;
-  if(c.fire3) FIRE_T3 = c.fire3;
+      // Fire thresholds
+      if (c.fire1) FIRE_T1 = c.fire1;
+      if (c.fire2) FIRE_T2 = c.fire2;
+      if (c.fire3) FIRE_T3 = c.fire3;
 
-  // Sound config
-  if(c.soundEnabled !== undefined) SOUND_ENABLED = c.soundEnabled;
-  if(c.volume !== undefined) SOUND_VOL = (c.volume||60)/100;
-  if(c.soundSmall)  SOUND_MAP.small  = c.soundSmall;
-  if(c.soundMid)    SOUND_MAP.mid    = c.soundMid;
-  if(c.soundBig)    SOUND_MAP.big    = c.soundBig;
-  if(c.soundStreak) SOUND_MAP.streak = c.soundStreak;
+      // Sound config
+      if (c.soundEnabled !== undefined) SOUND_ENABLED = c.soundEnabled;
+      if (c.volume !== undefined) SOUND_VOL = (c.volume || 60) / 100;
+      if (c.soundSmall) SOUND_MAP.small = c.soundSmall;
+      if (c.soundMid) SOUND_MAP.mid = c.soundMid;
+      if (c.soundBig) SOUND_MAP.big = c.soundBig;
+      if (c.soundStreak) SOUND_MAP.streak = c.soundStreak;
 
-  // Shake
-  SHAKE_ENABLED = c.shakeEnabled !== false;
-}
+      // Shake
+      SHAKE_ENABLED = c.shakeEnabled !== false;
+    }
 
-// Tell dashboard we're ready
-if(window.parent !== window) {
-  window.parent.postMessage({type:'HACKY_READY'},'*');
-}
-</script>
+    // Tell dashboard we're ready
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'HACKY_READY' }, '*');
+    }
+  </script>
 </body>
+
 </html>
