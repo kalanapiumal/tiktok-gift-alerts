@@ -78,43 +78,7 @@
             box-shadow: 0 0 6px #ff2d55;
         }
 
-        /* ── STATS BAR ── */
-        .stats {
-            display: flex;
-            gap: 0;
-            flex-shrink: 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        }
 
-        .stat {
-            flex: 1;
-            padding: 10px 16px;
-            border-right: 1px solid rgba(255, 255, 255, 0.06);
-            text-align: center;
-        }
-
-        .stat:last-child {
-            border-right: none;
-        }
-
-        .stat-val {
-            font-size: 18px;
-            font-weight: 700;
-            color: #fff;
-            line-height: 1;
-        }
-
-        .stat-val.coins-val {
-            color: #ffd700;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.35);
-            margin-top: 3px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
 
         /* ── FEED ── */
         #feed {
@@ -317,20 +281,7 @@
         </div>
     </header>
 
-    <div class="stats">
-        <div class="stat">
-            <div class="stat-val" id="stat-gifts">0</div>
-            <div class="stat-label">Gifts</div>
-        </div>
-        <div class="stat">
-            <div class="stat-val" id="stat-gifters">0</div>
-            <div class="stat-label">Gifters</div>
-        </div>
-        <div class="stat">
-            <div class="stat-val coins-val" id="stat-coins">0</div>
-            <div class="stat-label">Total 🪙</div>
-        </div>
-    </div>
+
 
     <div id="feed">
         <div id="empty">
@@ -377,11 +328,7 @@
             if (coins >= 10) return 'tier-low';
             return 'tier-cheap';
         }
-        function updateStats() {
-            document.getElementById('stat-gifts').textContent = totalGifts.toLocaleString();
-            document.getElementById('stat-gifters').textContent = gifters.size;
-            document.getElementById('stat-coins').textContent = fmtCoins(totalCoins);
-        }
+
         function setStatus(state, msg) {
             const dot = document.getElementById('dot');
             dot.className = 'status-dot' + (state === 'live' ? ' live' : state === 'error' ? ' error' : '');
@@ -450,7 +397,6 @@
 
             // Update total
             totalCoins += diff;
-            updateStats();
 
             // Update coin display
             const coinEl = row.querySelector('.gift-coins');
@@ -493,7 +439,6 @@
                     totalGifts++;
                     totalCoins += coins;
                     gifters.add(username.toLowerCase());
-                    updateStats();
 
                     const row = addRow({ username, giftName, coins, pictureUrl, streakKey });
                     if (streakKey) streakRows.set(streakKey, row);
