@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gift Log — @hackystreaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0d0d14;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── HEADER ── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .header-title span {
+            color: #ff2d55;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 5px 12px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #444;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .status-dot.live {
+            background: #00d26a;
+            box-shadow: 0 0 6px #00d26a;
+        }
+
+        .status-dot.error {
+            background: #ff2d55;
+            box-shadow: 0 0 6px #ff2d55;
+        }
+
+        /* ── STATS BAR ── */
+        .stats {
+            display: flex;
+            gap: 0;
+            flex-shrink: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .stat {
+            flex: 1;
+            padding: 10px 16px;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+        }
+
+        .stat:last-child {
+            border-right: none;
+        }
+
+        .stat-val {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .stat-val.coins-val {
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* ── FEED ── */
+        #feed {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+            scroll-behavior: smooth;
+        }
+
+        #feed::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #feed::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #feed::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* ── GIFT ROW ── */
+        .gift-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            animation: rowIn 0.25s ease-out forwards;
+            transition: background 0.15s;
+        }
+
+        .gift-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        @keyframes rowIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* tier accent left border */
+        .gift-row.tier-cheap {
+            border-left: 3px solid #555;
+        }
+
+        .gift-row.tier-low {
+            border-left: 3px solid #ff2d55;
+        }
+
+        .gift-row.tier-mid {
+            border-left: 3px solid #ff9a3c;
+        }
+
+        .gift-row.tier-high {
+            border-left: 3px solid #ffd700;
+        }
+
+        .gift-row.tier-whale {
+            border-left: 3px solid #c084fc;
+        }
+
+        .gift-img-wrap {
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+        }
+
+        .gift-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .gift-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .gifter-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+
+        .gift-name {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.45);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .gift-coins {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffd700;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .gift-coins.streak-update {
+            color: #ff9a3c;
+        }
+
+        .gift-time {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+            width: 36px;
+            text-align: right;
+        }
+
+        /* ── EMPTY STATE ── */
+        #empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 13px;
+            user-select: none;
+        }
+
+        #empty .icon {
+            font-size: 32px;
+            opacity: 0.4;
+        }
+
+        /* ── BOTTOM BAR ── */
+        footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+            gap: 8px;
+        }
+
+        footer button {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            font-family: 'Inter', sans-serif;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        footer button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        footer button.danger:hover {
+            background: rgba(255, 45, 85, 0.15);
+            color: #ff2d55;
+            border-color: rgba(255, 45, 85, 0.3);
+        }
+
+        .footer-note {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-title">🎁 Gift Log — <span>@hackystreaming</span></div>
+        <div class="status-pill">
+            <div class="status-dot" id="dot"></div>
+            <span id="status-text">Connecting…</span>
+        </div>
+    </header>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-val" id="stat-gifts">0</div>
+            <div class="stat-label">Gifts</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val" id="stat-gifters">0</div>
+            <div class="stat-label">Gifters</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val coins-val" id="stat-coins">0</div>
+            <div class="stat-label">Total 🪙</div>
+        </div>
+    </div>
+
+    <div id="feed">
+        <div id="empty">
+            <div class="icon">🎁</div>
+            <div>Waiting for gifts…</div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-note" id="footer-note">Auto-scrolls to latest</div>
+        <div style="display:flex;gap:6px">
+            <button onclick="toggleScroll()" id="scroll-btn">📌 Pin</button>
+            <button class="danger" onclick="clearFeed()">🗑 Clear</button>
+        </div>
+    </footer>
+
+    <script>
+        /* ══════════════════════════════
+           STATE
+        ══════════════════════════════ */
+        let totalGifts = 0;
+        let totalCoins = 0;
+        const gifters = new Set();
+        let autoScroll = true;
+        const MAX_ROWS = 200; // keep DOM lean
+
+        // streak tracking: streakKey → row element
+        const streakRows = new Map();
+
+        /* ══════════════════════════════
+           HELPERS
+        ══════════════════════════════ */
+        function fmtCoins(n) {
+            if (n >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'K';
+            return String(n);
+        }
+        function fmtTime(d) {
+            return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        }
+        function tierClass(coins) {
+            if (coins >= 10000) return 'tier-whale';
+            if (coins >= 1000) return 'tier-high';
+            if (coins >= 100) return 'tier-mid';
+            if (coins >= 10) return 'tier-low';
+            return 'tier-cheap';
+        }
+        function updateStats() {
+            document.getElementById('stat-gifts').textContent = totalGifts.toLocaleString();
+            document.getElementById('stat-gifters').textContent = gifters.size;
+            document.getElementById('stat-coins').textContent = fmtCoins(totalCoins);
+        }
+        function setStatus(state, msg) {
+            const dot = document.getElementById('dot');
+            dot.className = 'status-dot' + (state === 'live' ? ' live' : state === 'error' ? ' error' : '');
+            document.getElementById('status-text').textContent = msg;
+        }
+        function scrollToBottom() {
+            if (!autoScroll) return;
+            const feed = document.getElementById('feed');
+            feed.scrollTop = feed.scrollHeight;
+        }
+        function removeEmpty() {
+            const e = document.getElementById('empty');
+            if (e) e.remove();
+        }
+        function pruneRows() {
+            const feed = document.getElementById('feed');
+            const rows = feed.querySelectorAll('.gift-row');
+            if (rows.length > MAX_ROWS) {
+                for (let i = 0; i < rows.length - MAX_ROWS; i++) rows[i].remove();
+            }
+        }
+
+        /* ══════════════════════════════
+           ADD A NEW ROW
+        ══════════════════════════════ */
+        function addRow({ username, giftName, coins, pictureUrl, streakKey }) {
+            removeEmpty();
+
+            const row = document.createElement('div');
+            row.className = `gift-row ${tierClass(coins)}`;
+            if (streakKey) {
+                row.dataset.streakKey = streakKey;
+                row.dataset.coins = coins;
+            }
+
+            const imgContent = pictureUrl
+                ? `<img src="${pictureUrl}" onerror="this.parentElement.textContent='🎁'" />`
+                : '🎁';
+
+            row.innerHTML = `
+        <div class="gift-img-wrap">${imgContent}</div>
+        <div class="gift-info">
+          <div class="gifter-name">${esc(username)}</div>
+          <div class="gift-name">${esc(giftName)}</div>
+        </div>
+        <div class="gift-coins">${fmtCoins(coins)} 🪙</div>
+        <div class="gift-time">${fmtTime(new Date())}</div>
+      `;
+
+            document.getElementById('feed').appendChild(row);
+            pruneRows();
+            scrollToBottom();
+            return row;
+        }
+
+        /* ══════════════════════════════
+           UPDATE STREAK ROW (live count)
+        ══════════════════════════════ */
+        function updateRow(streakKey, coins) {
+            const row = streakRows.get(streakKey);
+            if (!row) return;
+            const prev = parseInt(row.dataset.coins || '0', 10);
+            const diff = coins - prev;
+            if (diff <= 0) return;
+            row.dataset.coins = coins;
+
+            // Update total
+            totalCoins += diff;
+            updateStats();
+
+            // Update coin display
+            const coinEl = row.querySelector('.gift-coins');
+            if (coinEl) {
+                coinEl.textContent = fmtCoins(coins) + ' 🪙';
+                coinEl.classList.add('streak-update');
+                setTimeout(() => coinEl.classList.remove('streak-update'), 400);
+            }
+
+            // Update tier border
+            row.className = `gift-row ${tierClass(coins)}`;
+        }
+
+        /* ══════════════════════════════
+           SSE CONNECTION
+        ══════════════════════════════ */
+        function connect() {
+            const base = window.location.origin;
+            setStatus('', 'Connecting…');
+
+            const es = new EventSource(`${base}/events`);
+
+            es.addEventListener('connected', () => {
+                setStatus('live', 'Live 🔴');
+            });
+
+            es.addEventListener('offline', () => {
+                setStatus('error', 'Not live yet…');
+            });
+
+            es.addEventListener('gift', e => {
+                try {
+                    const d = JSON.parse(e.data);
+                    const username = d.nickname || d.uniqueId || 'Someone';
+                    const giftName = d.giftName || 'Gift';
+                    const coins = d.coins || 1;
+                    const streakKey = d.streakKey || '';
+                    const pictureUrl = d.pictureUrl || '';
+
+                    totalGifts++;
+                    totalCoins += coins;
+                    gifters.add(username.toLowerCase());
+                    updateStats();
+
+                    const row = addRow({ username, giftName, coins, pictureUrl, streakKey });
+                    if (streakKey) streakRows.set(streakKey, row);
+                } catch (_) { }
+            });
+
+            es.addEventListener('gift_update', e => {
+                try {
+                    const d = JSON.parse(e.data);
+                    if (d.streakKey) updateRow(d.streakKey, d.coins || 0);
+                } catch (_) { }
+            });
+
+            es.addEventListener('gift_end', e => {
+                try {
+                    const d = JSON.parse(e.data);
+                    if (d.streakKey) {
+                        updateRow(d.streakKey, d.coins || 0);
+                        streakRows.delete(d.streakKey);
+                    }
+                } catch (_) { }
+            });
+
+            es.onerror = () => setStatus('error', 'Connection lost…');
+        }
+
+        /* ══════════════════════════════
+           CONTROLS
+        ══════════════════════════════ */
+        function toggleScroll() {
+            autoScroll = !autoScroll;
+            const btn = document.getElementById('scroll-btn');
+            btn.textContent = autoScroll ? '📌 Pin' : '▼ Follow';
+            document.getElementById('footer-note').textContent = autoScroll ? 'Auto-scrolls to latest' : 'Scrolling paused';
+            if (autoScroll) scrollToBottom();
+        }
+
+        function clearFeed() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '<div id="empty"><div class="icon">🎁</div><div>Waiting for gifts…</div></div>';
+            streakRows.clear();
+        }
+
+        // Pause auto-scroll when user manually scrolls up
+        document.getElementById('feed').addEventListener('scroll', function () {
+            const atBottom = this.scrollHeight - this.scrollTop - this.clientHeight < 40;
+            if (!atBottom && autoScroll) toggleScroll();
+        });
+
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, c =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        connect();
+    </script>
+</body>
+
+</html>

@@ -130,6 +130,7 @@ app.get('/', (req, res) => {
 <p>OBS clients connected: <b>${clients.size}</b></p>
 <div class="links">
   <p><a href="/overlay">🖥 Overlay page (OBS source)</a></p>
+  <p><a href="/gift-log">📣 Gift Log (streamer monitor)</a></p>
   <p><a href="/status">/status JSON</a></p>
   <p><a href="/gift-db">📦 Live Gift DB (${giftDbFetched ? (liveGiftDb.size / 2 | 0) + ' gifts' : 'not loaded yet'})</a></p>
   <p><a href="/unknown-gifts">🆕 Unknown / New Gifts log</a></p>
@@ -363,6 +364,11 @@ app.get('/overlay', (req, res) => {
 // ── Dashboard HTML
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+// ── Gift Log (streamer monitor page)
+app.get('/gift-log', (req, res) => {
+  res.sendFile(path.join(__dirname, 'gift-log.html'));
 });
 
 // ── Static files (after all routes)
