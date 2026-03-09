@@ -374,7 +374,7 @@
           <div class="gifter-name">${esc(username)}</div>
           <div class="gift-name">${esc(giftName)}</div>
         </div>
-        <div class="gift-coins">${fmtCoins(coins)} 🪙</div>
+        <div class="gift-coins">🪙 ${fmtCoins(coins)}</div>
         <div class="gift-time">${fmtTime(new Date())}</div>
       `;
 
@@ -401,7 +401,7 @@
             // Update coin display
             const coinEl = row.querySelector('.gift-coins');
             if (coinEl) {
-                coinEl.textContent = fmtCoins(coins) + ' 🪙';
+                coinEl.textContent = '🪙 ' + fmtCoins(coins);
                 coinEl.classList.add('streak-update');
                 setTimeout(() => coinEl.classList.remove('streak-update'), 400);
             }
