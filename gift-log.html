@@ -25,60 +25,6 @@
             overflow: hidden;
         }
 
-        /* ── HEADER ── */
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 20px;
-            background: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-            flex-shrink: 0;
-        }
-
-        .header-title {
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .header-title span {
-            color: #ff2d55;
-        }
-
-        .status-pill {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: 5px 12px;
-        }
-
-        .status-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #444;
-            transition: background 0.3s;
-            flex-shrink: 0;
-        }
-
-        .status-dot.live {
-            background: #00d26a;
-            box-shadow: 0 0 6px #00d26a;
-        }
-
-        .status-dot.error {
-            background: #ff2d55;
-            box-shadow: 0 0 6px #ff2d55;
-        }
-
-
 
         /* ── FEED ── */
         #feed {
@@ -231,56 +177,10 @@
         }
 
         /* ── BOTTOM BAR ── */
-        footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            flex-shrink: 0;
-            gap: 8px;
-        }
-
-        footer button {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 11px;
-            font-family: 'Inter', sans-serif;
-            padding: 6px 12px;
-            cursor: pointer;
-            transition: background 0.15s, color 0.15s;
-        }
-
-        footer button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        footer button.danger:hover {
-            background: rgba(255, 45, 85, 0.15);
-            color: #ff2d55;
-            border-color: rgba(255, 45, 85, 0.3);
-        }
-
-        .footer-note {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.2);
-        }
     </style>
 </head>
 
 <body>
-
-    <header>
-        <div class="header-title">🎁 Gift Log — <span>@hackystreaming</span></div>
-        <div class="status-pill">
-            <div class="status-dot" id="dot"></div>
-            <span id="status-text">Connecting…</span>
-        </div>
-    </header>
-
 
 
     <div id="feed">
@@ -290,32 +190,13 @@
         </div>
     </div>
 
-    <footer>
-        <div class="footer-note" id="footer-note">Auto-scrolls to latest</div>
-        <div style="display:flex;gap:6px">
-            <button onclick="toggleScroll()" id="scroll-btn">📌 Pin</button>
-            <button class="danger" onclick="clearFeed()">🗑 Clear</button>
-        </div>
-    </footer>
-
     <script>
-        /* ══════════════════════════════
-           STATE
-        ══════════════════════════════ */
-        let totalGifts = 0;
-        let totalCoins = 0;
-        const gifters = new Set();
-        let autoScroll = true;
-        const MAX_ROWS = 200; // keep DOM lean
-
-        // streak tracking: streakKey → row element
+        /* ── constants ── */
+        const MAX_ROWS = 200;
         const streakRows = new Map();
+        const COIN_SVG = `<svg width="14" height="14" viewBox="0 0 20 20" style="vertical-align:middle;margin-right:3px;margin-bottom:2px;"><circle cx="10" cy="10" r="9" fill="#FFD700" stroke="#D97706" stroke-width="2"/><circle cx="10" cy="10" r="4" fill="#FBBF24"/></svg>`;
 
-        const COIN_SVG = `<svg width="15" height="15" viewBox="0 0 20 20" style="vertical-align:middle;margin-right:3px;margin-bottom:2px;"><circle cx="10" cy="10" r="9" fill="#FFD700" stroke="#D97706" stroke-width="2"/><circle cx="10" cy="10" r="4" fill="#FBBF24"/></svg>`;
-
-        /* ══════════════════════════════
-           HELPERS
-        ══════════════════════════════ */
+        /* ── helpers ── */
         function fmtCoins(n) {
             if (n >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'K';
             return String(n);
@@ -330,14 +211,7 @@
             if (coins >= 10) return 'tier-low';
             return 'tier-cheap';
         }
-
-        function setStatus(state, msg) {
-            const dot = document.getElementById('dot');
-            dot.className = 'status-dot' + (state === 'live' ? ' live' : state === 'error' ? ' error' : '');
-            document.getElementById('status-text').textContent = msg;
-        }
         function scrollToBottom() {
-            if (!autoScroll) return;
             const feed = document.getElementById('feed');
             feed.scrollTop = feed.scrollHeight;
         }
@@ -348,9 +222,8 @@
         function pruneRows() {
             const feed = document.getElementById('feed');
             const rows = feed.querySelectorAll('.gift-row');
-            if (rows.length > MAX_ROWS) {
+            if (rows.length > MAX_ROWS)
                 for (let i = 0; i < rows.length - MAX_ROWS; i++) rows[i].remove();
-            }
         }
 
         /* ══════════════════════════════
@@ -397,9 +270,6 @@
             if (diff <= 0) return;
             row.dataset.coins = coins;
 
-            // Update total
-            totalCoins += diff;
-
             // Update coin display
             const coinEl = row.querySelector('.gift-coins');
             if (coinEl) {
@@ -417,17 +287,11 @@
         ══════════════════════════════ */
         function connect() {
             const base = window.location.origin;
-            setStatus('', 'Connecting…');
 
             const es = new EventSource(`${base}/events`);
 
-            es.addEventListener('connected', () => {
-                setStatus('live', 'Live 🔴');
-            });
-
-            es.addEventListener('offline', () => {
-                setStatus('error', 'Not live yet…');
-            });
+            es.addEventListener('connected', () => { });
+            es.addEventListener('offline', () => { });
 
             es.addEventListener('gift', e => {
                 try {
@@ -464,31 +328,10 @@
                 } catch (_) { }
             });
 
-            es.onerror = () => setStatus('error', 'Connection lost…');
+            es.onerror = () => { };
         }
 
-        /* ══════════════════════════════
-           CONTROLS
-        ══════════════════════════════ */
-        function toggleScroll() {
-            autoScroll = !autoScroll;
-            const btn = document.getElementById('scroll-btn');
-            btn.textContent = autoScroll ? '📌 Pin' : '▼ Follow';
-            document.getElementById('footer-note').textContent = autoScroll ? 'Auto-scrolls to latest' : 'Scrolling paused';
-            if (autoScroll) scrollToBottom();
-        }
 
-        function clearFeed() {
-            const feed = document.getElementById('feed');
-            feed.innerHTML = '<div id="empty"><div class="icon">🎁</div><div>Waiting for gifts…</div></div>';
-            streakRows.clear();
-        }
-
-        // Pause auto-scroll when user manually scrolls up
-        document.getElementById('feed').addEventListener('scroll', function () {
-            const atBottom = this.scrollHeight - this.scrollTop - this.clientHeight < 40;
-            if (!atBottom && autoScroll) toggleScroll();
-        });
 
         function esc(s) {
             return String(s).replace(/[&<>"']/g, c =>
