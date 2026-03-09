@@ -842,6 +842,36 @@
     body.obs-mode #config-panel {
       display: none !important;
     }
+
+    /* ─── NEW GIFT BADGE ─── */
+    .new-gift-badge {
+      position: absolute;
+      top: -12px;
+      left: 18px;
+      background: linear-gradient(135deg, #ff2d55, #ff9a3c);
+      color: #fff;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 13px;
+      letter-spacing: 2px;
+      padding: 3px 12px;
+      border-radius: 20px;
+      z-index: 10;
+      pointer-events: none;
+      box-shadow: 0 0 14px rgba(255, 45, 85, 0.7), 0 3px 10px rgba(0, 0, 0, 0.4);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      animation: newGiftPulse 1s ease-in-out infinite alternate;
+      white-space: nowrap;
+    }
+
+    @keyframes newGiftPulse {
+      from {
+        box-shadow: 0 0 10px rgba(255, 45, 85, 0.6);
+      }
+
+      to {
+        box-shadow: 0 0 22px rgba(255, 154, 60, 0.9);
+      }
+    }
   </style>
 </head>
 
@@ -858,7 +888,7 @@
     <input id="input-proxy" type="text" placeholder="https://your-proxy.railway.app" />
 
     <label>Alert Duration (seconds)</label>
-    <input id="input-duration" type="number" value="5" min="2" max="15" />
+    <input id="input-duration" type="number" value="7" min="2" max="15" />
 
     <button onclick="testSingle()">🎭 Test Single Gift</button>
     <button class="streak-btn" onclick="testStreakLocal()">🔥 Test Streak x50</button>
@@ -899,28 +929,136 @@
        GIFT DATABASE
     ═══════════════════════════════════════ */
     const GIFT_DATA = {
+      // ─ Streakable (cheap)
       'rose': { emoji: '🌹', c1: '#ff2d55', c2: '#ff6b9d', coins: 1 },
       'finger heart': { emoji: '🤟', c1: '#ff2d55', c2: '#ff9a3c', coins: 5 },
+      'hand heart': { emoji: '❤️', c1: '#ff2d55', c2: '#ff6b9d', coins: 5 },
+      'heart': { emoji: '❤️', c1: '#ff2d55', c2: '#ff6b9d', coins: 10 },
+      'heart me': { emoji: '💖', c1: '#ff2d55', c2: '#ff6baf', coins: 10 },
       'tiktok': { emoji: '🎵', c1: '#010101', c2: '#69c9d0', coins: 1 },
       'sunglasses': { emoji: '😎', c1: '#0070f3', c2: '#00cfff', coins: 5 },
-      'diamond': { emoji: '💎', c1: '#5c35cc', c2: '#00cfff', coins: 5000 },
-      'universe': { emoji: '🌌', c1: '#5c35cc', c2: '#ff2d55', coins: 34999 },
-      'lion': { emoji: '🦁', c1: '#ff9a3c', c2: '#ffd700', coins: 29999 },
-      'interstellar': { emoji: '🚀', c1: '#0a0a0f', c2: '#5c35cc', coins: 9999 },
-      'heart me': { emoji: '💖', c1: '#ff2d55', c2: '#ff6baf', coins: 10 },
       'ice cream': { emoji: '🍦', c1: '#f7a8d8', c2: '#a8d8f7', coins: 1 },
+      'diny': { emoji: '🦕', c1: '#c8f56e', c2: '#59d102', coins: 1 },
       'balloon': { emoji: '🎈', c1: '#ff6b00', c2: '#ffd700', coins: 1 },
       'confetti': { emoji: '🎉', c1: '#ffd700', c2: '#ff6b00', coins: 10 },
       'star': { emoji: '⭐', c1: '#ffd700', c2: '#ff9a3c', coins: 5 },
-      'crown': { emoji: '👑', c1: '#ffd700', c2: '#ff6b00', coins: 500 },
-      'heart': { emoji: '❤️', c1: '#ff2d55', c2: '#ff6b9d', coins: 10 },
       'galaxy': { emoji: '🌠', c1: '#5c35cc', c2: '#69c9d0', coins: 50 },
+      'perfume': { emoji: '🪮', c1: '#c084fc', c2: '#e879f9', coins: 20 },
+      'cap': { emoji: '🧢', c1: '#0070f3', c2: '#00cfff', coins: 1 },
+      'hat': { emoji: '🧢', c1: '#ffd700', c2: '#ff9a3c', coins: 5 },
+      'doughnut': { emoji: '🍩', c1: '#f472b6', c2: '#fb923c', coins: 5 },
+      'pizza': { emoji: '🍕', c1: '#ff6b00', c2: '#ffd700', coins: 1 },
+      'cat': { emoji: '🐱', c1: '#ff9a3c', c2: '#ffd700', coins: 1 },
+      'puppy': { emoji: '🐶', c1: '#c08040', c2: '#ffd700', coins: 1 },
+      'corgi': { emoji: '🐕', c1: '#ff9a3c', c2: '#ffd700', coins: 10 },
+      'lucky cat': { emoji: '🛯', c1: '#ffd700', c2: '#ff6b00', coins: 88 },
+      'rainbow': { emoji: '🌈', c1: '#ff2d55', c2: '#5c35cc', coins: 10 },
+      'music': { emoji: '🎵', c1: '#5c35cc', c2: '#00cfff', coins: 5 },
+      'microphone': { emoji: '🎤', c1: '#ff2d55', c2: '#ff6b00', coins: 10 },
+      'guitar': { emoji: '🎸', c1: '#ff6b00', c2: '#ffd700', coins: 55 },
+      'gaming': { emoji: '🎮', c1: '#5c35cc', c2: '#00cfff', coins: 5 },
+      'camera': { emoji: '📷', c1: '#555', c2: '#aaa', coins: 5 },
+      'birthday cake': { emoji: '🎂', c1: '#f472b6', c2: '#fb923c', coins: 1 },
+      'cake': { emoji: '🎂', c1: '#f472b6', c2: '#ffd700', coins: 5 },
+      // ─ Mid tier
+      'crown': { emoji: '👑', c1: '#ffd700', c2: '#ff6b00', coins: 500 },
+      'medal': { emoji: '🎖️', c1: '#ffd700', c2: '#ff9a3c', coins: 99 },
+      'trophy': { emoji: '🏆', c1: '#ffd700', c2: '#ff9a3c', coins: 199 },
+      'gem': { emoji: '💎', c1: '#00cfff', c2: '#5c35cc', coins: 299 },
+      'ruby': { emoji: '💎', c1: '#ff2d55', c2: '#ff6b9d', coins: 399 },
+      'sapphire': { emoji: '💎', c1: '#0070f3', c2: '#00cfff', coins: 399 },
+      'emerald': { emoji: '💎', c1: '#00d26a', c2: '#69c9d0', coins: 399 },
+      'soccer goal': { emoji: '⚽', c1: '#333', c2: '#00d26a', coins: 99 },
+      'football': { emoji: '🏈', c1: '#ff6b00', c2: '#ffd700', coins: 99 },
+      'basketball': { emoji: '🏀', c1: '#ff6b00', c2: '#ff2d55', coins: 99 },
+      'boxing gloves': { emoji: '🥊', c1: '#ff2d55', c2: '#ff6b00', coins: 199 },
+      'airplane': { emoji: '✈️', c1: '#0070f3', c2: '#00cfff', coins: 99 },
+      'sports car': { emoji: '🏎️', c1: '#ff2d55', c2: '#ffd700', coins: 500 },
+      'ship': { emoji: '🚢', c1: '#0070f3', c2: '#00cfff', coins: 500 },
+      'rocket': { emoji: '🚀', c1: '#5c35cc', c2: '#ff6b00', coins: 500 },
+      'castle': { emoji: '🏯', c1: '#5c35cc', c2: '#c084fc', coins: 1000 },
+      'knight': { emoji: '♞', c1: '#555', c2: '#00cfff', coins: 500 },
+      'wishing bottle': { emoji: '🧪', c1: '#00cfff', c2: '#5c35cc', coins: 99 },
+      'magic hat': { emoji: '🎩', c1: '#5c35cc', c2: '#ffd700', coins: 299 },
+      'money bag': { emoji: '💰', c1: '#ffd700', c2: '#00d26a', coins: 500 },
+      'gold bar': { emoji: '🧱', c1: '#ffd700', c2: '#ff9a3c', coins: 999 },
+      'money gun': { emoji: '💸', c1: '#00d26a', c2: '#ffd700', coins: 1000 },
+      'treasure': { emoji: '📦', c1: '#ffd700', c2: '#ff9a3c', coins: 2000 },
+      'chest': { emoji: '📦', c1: '#ff9a3c', c2: '#ffd700', coins: 1000 },
+      // ─ High tier
+      'planet': { emoji: '🪐', c1: '#5c35cc', c2: '#00cfff', coins: 2999 },
+      'meteor': { emoji: '☄️', c1: '#ff6b00', c2: '#ffd700', coins: 3999 },
+      'comet': { emoji: '☄️', c1: '#0070f3', c2: '#c084fc', coins: 2999 },
+      'interstellar': { emoji: '🚀', c1: '#0a0a0f', c2: '#5c35cc', coins: 9999 },
+      'diamond': { emoji: '💎', c1: '#5c35cc', c2: '#00cfff', coins: 5000 },
+      'dragon': { emoji: '🐉', c1: '#ff2d55', c2: '#ff6b00', coins: 9999 },
+      'phoenix': { emoji: '🔥', c1: '#ff6b00', c2: '#ffd700', coins: 9999 },
+      'unicorn': { emoji: '🦄', c1: '#f472b6', c2: '#c084fc', coins: 5000 },
+      'fantasy': { emoji: '✨', c1: '#c084fc', c2: '#ffd700', coins: 9999 },
+      'vip': { emoji: '💎', c1: '#ffd700', c2: '#ff9a3c', coins: 9999 },
+      'luxury': { emoji: '💵', c1: '#ffd700', c2: '#5c35cc', coins: 9999 },
+      'lion': { emoji: '🦁', c1: '#ff9a3c', c2: '#ffd700', coins: 29999 },
+      'universe': { emoji: '🌌', c1: '#5c35cc', c2: '#ff2d55', coins: 34999 },
+      // ─ Fallback for unrecognized gifts
       'default': { emoji: '🎁', c1: '#ff2d55', c2: '#5c35cc', coins: 1 },
     };
-    function getGiftInfo(name) {
+
+    /* ─────────────────────────────────────────
+       LIVE GIFT DB  (populated from server /gift-db + SSE gift_db)
+       Covers all TikTok regions + seasonal gifts automatically.
+       Keys: giftId (string) → { id, name, coins, img }
+    ───────────────────────────────────────── */
+    const liveGiftDb = {}; // giftId → { id, name, coins, img }
+
+    // Pick a gradient palette based on coin value alone
+    function coinsToPalette(coins) {
+      if (coins >= 30000) return { c1: '#5c35cc', c2: '#ff2d55' };  // universe tier
+      if (coins >= 10000) return { c1: '#ff9a3c', c2: '#ffd700' };  // lion tier
+      if (coins >= 5000) return { c1: '#5c35cc', c2: '#00cfff' };  // diamond tier
+      if (coins >= 1000) return { c1: '#ffd700', c2: '#ff6b00' };  // crown tier
+      if (coins >= 500) return { c1: '#ff6b00', c2: '#ffd700' };  // mid
+      if (coins >= 100) return { c1: '#5c35cc', c2: '#69c9d0' };  // galaxy tier
+      if (coins >= 50) return { c1: '#ffd700', c2: '#ff9a3c' };  // star tier
+      if (coins >= 10) return { c1: '#ff2d55', c2: '#ff6b9d' };  // heart tier
+      return { c1: '#ff2d55', c2: '#ff9a3c' };  // cheap
+    }
+
+    function loadLiveGiftDb(db) {
+      let count = 0;
+      for (const [id, g] of Object.entries(db)) {
+        liveGiftDb[id] = g;
+        count++;
+      }
+      console.log(`[GiftDB] ✅ Live DB loaded: ${count} gifts`);
+    }
+
+    // Fetch on page load (works immediately when served from same origin)
+    async function fetchLiveGiftDb() {
+      try {
+        const base = document.getElementById('input-proxy').value.trim().replace(/\/$/, '') || window.location.origin;
+        const res = await fetch(`${base}/gift-db`);
+        const json = await res.json();
+        if (json.fetched && json.db) loadLiveGiftDb(json.db);
+      } catch (e) { /* silent fail, will receive via SSE gift_db too */ }
+    }
+    setTimeout(fetchLiveGiftDb, 1000);
+
+    function getGiftInfo(name, giftId) {
+      // 1. Check live DB by giftId first (covers all TikTok gifts, all regions)
+      if (giftId) {
+        const live = liveGiftDb[String(giftId)];
+        if (live) {
+          const pal = coinsToPalette(live.coins || 0);
+          return { emoji: '🎁', ...pal, coins: live.coins || 1, name: live.name || name, isNew: false, liveImg: live.img || '' };
+        }
+      }
+      // 2. Check static GIFT_DATA by name substring
       const key = (name || '').toLowerCase();
-      for (const [k, v] of Object.entries(GIFT_DATA)) if (key.includes(k)) return { ...v, name };
-      return { ...GIFT_DATA['default'], name };
+      for (const [k, v] of Object.entries(GIFT_DATA)) {
+        if (k !== 'default' && key.includes(k)) return { ...v, name, isNew: false, liveImg: '' };
+      }
+      // 3. Unknown gift — flag it
+      return { ...GIFT_DATA['default'], name, isNew: true, liveImg: '' };
     }
 
     /* ═══════════════════════════════════════
@@ -1023,7 +1161,7 @@
       if (state === 'error') dot.classList.add('error');
       document.getElementById('status-text').textContent = msg;
     }
-    function dur() { return parseFloat(document.getElementById('input-duration').value) || 5; }
+    function dur() { return parseFloat(document.getElementById('input-duration').value) || 7; }
 
     /* ═══════════════════════════════════════
        FIRE EFFECT
@@ -1152,11 +1290,13 @@
     /* ═══════════════════════════════════════
        SHOW ALERT  (creates a new card)
     ═══════════════════════════════════════ */
-    function showAlert({ username, giftName, count = 1, coins, pictureUrl = '', streakKey = '' }) {
+    function showAlert({ username, giftName, giftId = '', count = 1, coins, pictureUrl = '', streakKey = '' }) {
       const d = dur();
       const holdMs = (d - 0.45) * 1000;
-      const info = getGiftInfo(giftName);
+      const info = getGiftInfo(giftName, giftId);
       const total = coins || (info.coins * count);
+      // Use DB image as additional fallback
+      const finalPic = pictureUrl || info.liveImg || '';
 
       // Flash
       const flash = document.getElementById('flash');
@@ -1187,12 +1327,18 @@
       }
       card.appendChild(pw);
 
-      const imgHtml = pictureUrl
-        ? `<img class="gift-img" src="${esc(pictureUrl)}" alt="${esc(giftName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><span class="gift-emoji-fallback" style="display:none">${info.emoji}</span>`
+      const imgHtml = finalPic
+        ? `<img class="gift-img" src="${esc(finalPic)}" alt="${esc(giftName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><span class="gift-emoji-fallback" style="display:none">${info.emoji}</span>`
         : `<span>${info.emoji}</span>`;
+
+      // NEW GIFT badge for unrecognized gifts
+      const newGiftBadge = info.isNew
+        ? `<div class="new-gift-badge">🆕 NEW GIFT</div>`
+        : '';
 
       card.innerHTML += `
     <div class="tiktok-mark">TIKTOK LIVE</div>
+    ${newGiftBadge}
     <div class="alert-icon">
       ${imgHtml}
       ${count > 1 ? `<div class="count-badge">×${count}</div>` : ''}
@@ -1293,8 +1439,24 @@
       console.log('[SSE] Connecting to:', base + '/events');
       evtSource = new EventSource(`${base}/events`);
 
-      evtSource.addEventListener('connected', e => { console.log('[SSE] TikTok connected', e.data); setStatus('connected', '@hackystreaming • Live 🔴'); });
+      evtSource.addEventListener('connected', e => {
+        console.log('[SSE] TikTok connected', e.data);
+        setStatus('connected', '@hackystreaming • Live 🔴');
+        // Re-fetch gift DB now that server is connected to TikTok
+        setTimeout(() => fetchLiveGiftDb(), 5000);
+      });
       evtSource.addEventListener('offline', e => { console.log('[SSE] TikTok offline', e.data); setStatus('error', 'Not live yet — waiting…'); });
+
+      // Live gift DB pushed from server after fetchAvailableGifts() succeeds
+      evtSource.addEventListener('gift_db', e => {
+        try {
+          const d = JSON.parse(e.data);
+          if (d.db) {
+            loadLiveGiftDb(d.db);
+            console.log(`[SSE] gift_db received: ${d.count} gifts`);
+          }
+        } catch (err) { console.warn('[SSE] gift_db parse error', err); }
+      });
 
       // New gift → create card
       evtSource.addEventListener('gift', e => {
@@ -1304,6 +1466,7 @@
           enqueue({
             username: d.nickname || d.uniqueId || 'Someone',
             giftName: d.giftName || 'Gift',
+            giftId: d.giftId || '',
             count: d.count || 1,
             coins: d.coins || null,
             pictureUrl: d.pictureUrl || '',

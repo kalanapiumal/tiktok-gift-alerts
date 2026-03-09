@@ -13,6 +13,88 @@ let tiktok = null;
 let reconnectTimer = null;
 const clients = new Set();
 
+// ── Unknown gift tracker
+// Gifts whose names are NOT in the HTML GIFT_DATA will be logged here
+const KNOWN_GIFTS = new Set([
+  'rose', 'finger heart', 'tiktok', 'sunglasses', 'diamond', 'universe',
+  'lion', 'interstellar', 'heart me', 'ice cream', 'balloon', 'confetti',
+  'star', 'crown', 'heart', 'galaxy',
+  // extended set (keep in sync with HTML)
+  'hand heart', 'tiny diny', 'small diny', 'diny', 'soccer goal', 'sports car',
+  'boxing gloves', 'perfume', 'corgi', 'lucky cat', 'airplane', 'fire',
+  'camera', 'football', 'basketball', 'cap', 'hat', 'doughnut', 'pizza',
+  'cat', 'puppy', 'rainbow', 'ship', 'rocket', 'knight', 'castle',
+  'gaming', 'guitar', 'microphone', 'music', 'birthday cake', 'cake',
+  'gem', 'ruby', 'sapphire', 'emerald', 'trophy', 'medal',
+  'planet', 'meteor', 'comet', 'dragon', 'phoenix', 'unicorn',
+  'money gun', 'money bag', 'gold bar', 'treasure', 'chest',
+  'wishing bottle', 'magic hat', 'fantasy', 'vip', 'luxury',
+]);
+const unknownGifts = new Map(); // giftName → { data, count, firstSeen }
+
+// ── Live gift DB (populated by fetchAvailableGifts after connect)
+// Keyed by giftId (string) AND by lowercase name for fast lookup
+const liveGiftDb = new Map();
+let giftDbFetched = false;
+let giftDbFetchTimer = null;
+
+async function fetchGiftDb() {
+  if (!tiktok) return;
+  try {
+    const gifts = await tiktok.fetchAvailableGifts();
+    if (!Array.isArray(gifts) || gifts.length === 0) {
+      console.warn('[GiftDB] fetchAvailableGifts returned empty, will retry in 30s');
+      scheduleGiftDbFetch(30000);
+      return;
+    }
+    liveGiftDb.clear();
+    for (const g of gifts) {
+      const id = String(g.id || g.giftId || '');
+      const name = (g.name || g.giftName || '').toLowerCase().trim();
+      const img = g.image?.url_list?.[0] || g.image_url || g.pictureUrl || '';
+      const entry = {
+        id,
+        name: g.name || g.giftName || '',
+        coins: g.diamond_count || g.diamondCount || 0,
+        img,
+        type: g.type || g.giftType || 0,
+      };
+      if (id) liveGiftDb.set(id, entry);
+      if (name) liveGiftDb.set(name, entry);
+    }
+    giftDbFetched = true;
+    console.log(`[GiftDB] ✅ Loaded ${gifts.length} gifts from TikTok API`);
+
+    // Update the KNOWN_GIFTS set so unknown-gift detection stays accurate
+    for (const g of gifts) {
+      const n = (g.name || '').toLowerCase().trim();
+      if (n) KNOWN_GIFTS.add(n);
+    }
+
+    // Send to all connected OBS clients via SSE
+    const dbPayload = {};
+    for (const g of gifts) {
+      const id = String(g.id || g.giftId || '');
+      if (id) dbPayload[id] = {
+        id,
+        name: g.name || g.giftName || '',
+        coins: g.diamond_count || g.diamondCount || 0,
+        img: g.image?.url_list?.[0] || g.image_url || '',
+        type: g.type || g.giftType || 0,
+      };
+    }
+    broadcast('gift_db', { count: gifts.length, db: dbPayload });
+  } catch (err) {
+    console.warn('[GiftDB] fetch failed:', err.message);
+    scheduleGiftDbFetch(60000);
+  }
+}
+
+function scheduleGiftDbFetch(ms = 15000) {
+  if (giftDbFetchTimer) clearTimeout(giftDbFetchTimer);
+  giftDbFetchTimer = setTimeout(fetchGiftDb, ms);
+}
+
 function broadcast(event, data) {
   const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const res of clients) {
@@ -49,6 +131,8 @@ app.get('/', (req, res) => {
 <div class="links">
   <p><a href="/overlay">🖥 Overlay page (OBS source)</a></p>
   <p><a href="/status">/status JSON</a></p>
+  <p><a href="/gift-db">📦 Live Gift DB (${giftDbFetched ? (liveGiftDb.size / 2 | 0) + ' gifts' : 'not loaded yet'})</a></p>
+  <p><a href="/unknown-gifts">🆕 Unknown / New Gifts log</a></p>
 </div>
 <button class="testbtn" onclick="sendTest()">🎭 Send Single Gift</button>
 <button class="streakbtn" onclick="sendStreak()">🔥 Simulate Streak x50</button>
@@ -104,6 +188,121 @@ app.get('/events', (req, res) => {
 // ── Status JSON
 app.get('/status', (req, res) => {
   res.json({ status: tiktokStatus, username: TIKTOK_USERNAME, clients: clients.size });
+});
+
+// ── Live Gift DB — HTML gallery or JSON
+app.get('/gift-db', (req, res) => {
+  const wantsJson = req.query.json !== undefined || (req.headers.accept || '').includes('application/json');
+
+  const entries = [];
+  for (const [key, val] of liveGiftDb) {
+    if (/^\d+$/.test(key)) entries.push(val);
+  }
+  entries.sort((a, b) => a.coins - b.coins);
+
+  if (wantsJson) {
+    const db = {};
+    entries.forEach(e => { db[e.id] = e; });
+    return res.json({ fetched: giftDbFetched, count: entries.length, db });
+  }
+
+  if (!giftDbFetched) {
+    return res.send(`<!DOCTYPE html><html><head><title>Gift DB</title><meta charset="UTF-8"/>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0f;color:#fff;font-family:monospace;padding:32px}h1{color:#ff9a3c;font-size:22px;margin-bottom:16px}</style></head>
+<body><h1>📦 Live Gift DB</h1>
+<p style="color:rgba(255,255,255,0.4)">Gift DB not loaded yet. The server needs to connect to TikTok LIVE first. Make sure you are streaming and the server has connected.</p>
+<p style="margin-top:12px"><a href="/gift-db" style="color:#69c9d0">↻ Refresh</a></p></body></html>`);
+  }
+
+  const html = `<!DOCTYPE html>
+<html><head><title>TikTok Gift DB (${entries.length})</title><meta charset="UTF-8"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#fff;font-family:monospace;padding:32px}
+h1{font-size:22px;margin-bottom:8px;color:#ff9a3c}
+.subtitle{color:rgba(255,255,255,0.4);font-size:12px;margin-bottom:24px}
+.search{width:100%;max-width:500px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;padding:10px 16px;font-size:14px;outline:none;margin-bottom:20px;font-family:monospace}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.gift{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 10px;text-align:center;transition:border-color .2s}
+.gift:hover{border-color:rgba(255,154,60,0.5)}
+.gift img{width:56px;height:56px;object-fit:contain;margin:0 auto 8px;display:block}
+.gift .name{font-size:12px;color:#fff;font-weight:bold;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gift .coins{font-size:11px;color:#ff9a3c}
+.gift .id{font-size:10px;color:rgba(255,255,255,0.25);margin-top:2px}
+.empty-img{width:56px;height:56px;background:rgba(255,255,255,0.05);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 8px}
+input:focus{border-color:#ff9a3c}
+#count{color:rgba(255,255,255,0.4);font-size:12px;margin-bottom:12px}
+</style></head>
+<body>
+<h1>📦 Live TikTok Gift Database</h1>
+<p class="subtitle">Fetched from TikTok API · ${entries.length} gifts · Updates automatically each stream</p>
+<input class="search" id="q" placeholder="Search by name or ID…" oninput="filter(this.value)"/>
+<div id="count">${entries.length} gifts</div>
+<div class="grid" id="grid">
+${entries.map(g => `<div class="gift" data-name="${(g.name || '').toLowerCase()}" data-id="${g.id}">
+  ${g.img ? `<img src="${g.img}" onerror="this.style.display='none'" loading="lazy"/>` : `<div class="empty-img">🎁</div>`}
+  <div class="name" title="${g.name}">${g.name || 'Unknown'}</div>
+  <div class="coins">🪙 ${g.coins?.toLocaleString() || 0}</div>
+  <div class="id">ID: ${g.id}</div>
+</div>`).join('')}
+</div>
+<script>
+function filter(q){
+  q=q.toLowerCase().trim();
+  const gifts=document.querySelectorAll('.gift');
+  let shown=0;
+  gifts.forEach(el=>{
+    const match=!q||el.dataset.name.includes(q)||el.dataset.id.includes(q);
+    el.style.display=match?'':'none';
+    if(match)shown++;
+  });
+  document.getElementById('count').textContent=shown+' gifts'+(q?' matching "'+q+'"':'');
+}
+</script>
+</body></html>`;
+  res.send(html);
+});
+
+// ── Unknown gifts log (shows gifts not in GIFT_DATA)
+app.get('/unknown-gifts', (req, res) => {
+  const list = [];
+  for (const [name, info] of unknownGifts) {
+    list.push({ name, ...info });
+  }
+  list.sort((a, b) => b.count - a.count);
+  const html = `<!DOCTYPE html>
+<html><head><title>Unknown Gifts</title><meta charset="UTF-8"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#fff;font-family:monospace;padding:32px}
+h1{font-size:22px;margin-bottom:24px;color:#ff9a3c}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 16px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);font-size:11px;letter-spacing:1px;text-transform:uppercase}
+td{padding:10px 16px;border-top:1px solid rgba(255,255,255,0.06);font-size:13px;vertical-align:top}
+.url{color:#69c9d0;font-size:11px;word-break:break-all}
+.count{color:#ff9a3c;font-weight:bold}
+.new{background:rgba(255,45,85,0.1)}
+.img{width:40px;height:40px;object-fit:contain;border-radius:8px;background:#1a1a2e}
+.empty{color:rgba(255,255,255,0.3);padding:24px 0}
+</style></head>
+<body>
+<h1>🆕 Unknown / New Gifts (${list.length})</h1>
+<p style="color:rgba(255,255,255,0.4);font-size:12px;margin-bottom:20px">Gifts received during this session that are NOT in the gift database. Add them to GIFT_DATA in tiktok-gift-alert.html.</p>
+${list.length === 0
+      ? '<div class="empty">No unknown gifts seen yet this session! All received gifts are in the database. 🎉</div>'
+      : `<table>
+<thead><tr><th>Gift Name</th><th>Count</th><th>Coins</th><th>Gift ID</th><th>Image</th><th>Picture URL</th></tr></thead>
+<tbody>${list.map(g => `<tr class="new">
+  <td><b>${g.name}</b></td>
+  <td class="count">${g.count}×</td>
+  <td>${g.coins}</td>
+  <td style="font-size:11px;color:#aaa">${g.giftId || '-'}</td>
+  <td>${g.pictureUrl ? `<img class="img" src="${g.pictureUrl}" onerror="this.style.display='none'"/>` : '-'}</td>
+  <td class="url">${g.pictureUrl || '-'}</td>
+</tr>`).join('')}
+</tbody></table>`}
+</body></html>`;
+  res.send(html);
 });
 
 // ── Single test gift
@@ -205,6 +404,8 @@ function connectTikTok() {
       tiktokStatus = 'connected';
       console.log(`[TikTok] Connected! roomId=${state.roomId}`);
       broadcast('connected', { username: TIKTOK_USERNAME, roomId: state.roomId });
+      // Fetch gift database shortly after connecting (give the API a moment)
+      scheduleGiftDbFetch(3000);
     })
     .catch(err => {
       tiktokStatus = 'offline';
@@ -232,12 +433,37 @@ function connectTikTok() {
   tiktok.on('gift', data => {
     const now = Date.now();
     const isStreakable = data.giftType === 1;   // giftType 1 = streakable (Rose, Heart, etc.)
-    const giftId = data.giftId || data.gift_id || 'unknown';
+    const giftId = String(data.giftId || data.gift_id || 'unknown');
     const streakKey = `${data.uniqueId}:${giftId}`;
-    const pictureUrl = data.giftPictureUrl || data.giftImageUrl || data.pictureUrl || '';
-    const giftName = data.giftName || data.gift_name || 'Gift';
-    const diamondCount = data.diamondCount || data.diamond_count || 1;
+    // Enrich from live DB if available (covers ALL TikTok gifts, all regions)
+    const dbEntry = liveGiftDb.get(giftId);
+    const pictureUrl = data.giftPictureUrl || data.giftImageUrl || data.pictureUrl || dbEntry?.img || '';
+    const giftName = data.giftName || data.gift_name || dbEntry?.name || 'Gift';
+    const diamondCount = data.diamondCount || data.diamond_count || dbEntry?.coins || 1;
     const count = data.repeatCount || data.repeat_count || 1;
+
+    // ── Track unknown gifts (not in GIFT_DATA)
+    const giftNameLower = giftName.toLowerCase();
+    const isKnown = [...KNOWN_GIFTS].some(k => giftNameLower.includes(k));
+    if (!isKnown) {
+      const existing = unknownGifts.get(giftName);
+      if (existing) {
+        existing.count++;
+      } else {
+        unknownGifts.set(giftName, {
+          count: 1,
+          coins: diamondCount,
+          giftId,
+          pictureUrl,
+          giftType: data.giftType,
+          firstSeen: new Date().toISOString(),
+        });
+        // Log full raw data only on first encounter
+        console.log(`[Gift] 🆕 UNKNOWN GIFT: "${giftName}" giftId=${giftId} giftType=${data.giftType} coins=${diamondCount}`);
+        console.log(`[Gift]    pictureUrl: ${pictureUrl}`);
+        console.log(`[Gift]    raw keys: ${Object.keys(data).join(', ')}`);
+      }
+    }
 
     if (isStreakable) {
 
@@ -252,6 +478,7 @@ function connectTikTok() {
             uniqueId: data.uniqueId,
             nickname: data.nickname || data.uniqueId || 'Someone',
             giftName,
+            giftId,
             count: 1,
             coins: diamondCount,
             pictureUrl,
@@ -327,6 +554,7 @@ function connectTikTok() {
         uniqueId: data.uniqueId,
         nickname: data.nickname || data.uniqueId || 'Someone',
         giftName,
+        giftId,
         count: 1,
         coins: diamondCount,
         pictureUrl,
