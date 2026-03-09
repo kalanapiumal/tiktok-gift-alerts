@@ -311,6 +311,8 @@
         // streak tracking: streakKey → row element
         const streakRows = new Map();
 
+        const COIN_SVG = `<svg width="15" height="15" viewBox="0 0 20 20" style="vertical-align:middle;margin-right:3px;margin-bottom:2px;"><circle cx="10" cy="10" r="9" fill="#FFD700" stroke="#D97706" stroke-width="2"/><circle cx="10" cy="10" r="4" fill="#FBBF24"/></svg>`;
+
         /* ══════════════════════════════
            HELPERS
         ══════════════════════════════ */
@@ -374,7 +376,7 @@
           <div class="gifter-name">${esc(username)}</div>
           <div class="gift-name">${esc(giftName)}</div>
         </div>
-        <div class="gift-coins">🪙 ${fmtCoins(coins)}</div>
+        <div class="gift-coins">${COIN_SVG}${fmtCoins(coins)}</div>
         <div class="gift-time">${fmtTime(new Date())}</div>
       `;
 
@@ -401,7 +403,7 @@
             // Update coin display
             const coinEl = row.querySelector('.gift-coins');
             if (coinEl) {
-                coinEl.textContent = '🪙 ' + fmtCoins(coins);
+                coinEl.innerHTML = Object.assign(document.createElement('div'), { innerHTML: COIN_SVG }).innerHTML + fmtCoins(coins);
                 coinEl.classList.add('streak-update');
                 setTimeout(() => coinEl.classList.remove('streak-update'), 400);
             }
