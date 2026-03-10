@@ -141,13 +141,13 @@
         .gift-coins {
             font-size: 13px;
             font-weight: 700;
-            color: #ffd700;
+            color: rgba(255, 255, 255, 0.9);
             flex-shrink: 0;
             white-space: nowrap;
         }
 
         .gift-coins.streak-update {
-            color: #ff9a3c;
+            color: #fff;
         }
 
         .gift-time {
@@ -197,7 +197,7 @@
         let totalGifts = 0;
         let totalCoins = 0;
         const gifters = new Set();
-        const COIN_SVG = `<svg width="14" height="14" viewBox="0 0 20 20" style="vertical-align:middle;margin-right:3px;margin-bottom:2px;"><circle cx="10" cy="10" r="9" fill="#FFD700" stroke="#D97706" stroke-width="2"/><circle cx="10" cy="10" r="4" fill="#FBBF24"/></svg>`;
+        const COIN_SVG = `<svg width="14" height="14" viewBox="0 0 20 20" style="vertical-align:middle;margin-right:3px;margin-bottom:2px;"><circle cx="10" cy="10" r="9" fill="rgba(255, 255, 255, 0.1)" stroke="rgba(255, 255, 255, 0.5)" stroke-width="2"/><circle cx="10" cy="10" r="4" fill="rgba(255, 255, 255, 0.8)"/></svg>`;
 
         /* ── helpers ── */
         function fmtCoins(n) {
