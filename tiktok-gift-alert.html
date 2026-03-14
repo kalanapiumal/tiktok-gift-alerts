@@ -864,13 +864,180 @@
     }
 
     @keyframes newGiftPulse {
-      from {
-        box-shadow: 0 0 10px rgba(255, 45, 85, 0.6);
-      }
+      from { box-shadow: 0 0 10px rgba(255, 45, 85, 0.6); }
+      to   { box-shadow: 0 0 22px rgba(255, 154, 60, 0.9); }
+    }
 
-      to {
-        box-shadow: 0 0 22px rgba(255, 154, 60, 0.9);
-      }
+    /* ════════════════════════════════════
+   BIG GIFT EFFECTS (500+ coins)
+════════════════════════════════════ */
+
+    /* 1. Gold shimmer sweep — single pass across the card */
+    .big-gift-sweep {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .big-gift-sweep::after {
+      content: '';
+      position: absolute;
+      top: -20%; bottom: -20%;
+      width: 28%;
+      left: -35%;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255,215,0,0.45),
+        rgba(255,255,255,0.22),
+        rgba(255,215,0,0.45),
+        transparent);
+      transform: skewX(-14deg);
+      animation: bigGiftSweep 0.9s cubic-bezier(0.4,0,0.2,1) 0.08s forwards;
+    }
+    @keyframes bigGiftSweep {
+      from { left: -35%; }
+      to   { left: 140%; }
+    }
+
+    /* 2. Orbiting sparkle dots around the gift icon */
+    .orbit-dot {
+      position: absolute;
+      width: var(--od-size, 6px);
+      height: var(--od-size, 6px);
+      border-radius: 50%;
+      background: var(--od-color, #ffd700);
+      box-shadow: 0 0 7px 2px var(--od-color, #ffd700);
+      top: 50%; left: 50%;
+      pointer-events: none;
+      z-index: 5;
+      animation: orbitDot var(--od-dur, 2.2s) linear var(--od-delay, 0s) infinite;
+    }
+    @keyframes orbitDot {
+      from { transform: rotate(0deg)   translateX(var(--od-r, 52px)) translate(-50%, -50%); }
+      to   { transform: rotate(360deg) translateX(var(--od-r, 52px)) translate(-50%, -50%); }
+    }
+
+    /* 3. Coin burst particles released from the card */
+    .big-coin-p {
+      position: fixed;
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #fffde0, #ffd700 42%, #ff9a3c 80%);
+      border: 1.5px solid rgba(255,180,0,0.7);
+      box-shadow: 0 0 6px rgba(255,215,0,0.8);
+      pointer-events: none;
+      z-index: 1500;
+      opacity: 0;
+      animation: bigCoinFly var(--bc-dur,1s) ease-out var(--bc-delay,0s) forwards;
+    }
+    @keyframes bigCoinFly {
+      0%   { opacity:0; transform: translate(-50%,-50%) scale(0) rotate(0deg); }
+      12%  { opacity:1; transform: translate(calc(-50% + var(--bc-tx)*0.18), calc(-50% + var(--bc-ty)*0.18)) scale(1.25) rotate(30deg); }
+      100% { opacity:0; transform: translate(calc(-50% + var(--bc-tx)), calc(-50% + var(--bc-ty))) scale(0.35) rotate(var(--bc-spin,340deg)); }
+    }
+
+    /* 4. Whale badge on the card (top-centre) */
+    .whale-badge {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #8b5cf6, #c084fc, #ffd700);
+      color: #fff;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 13px;
+      letter-spacing: 2.5px;
+      padding: 3px 14px;
+      border-radius: 20px;
+      z-index: 10;
+      pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 0 16px rgba(139,92,246,0.85), 0 3px 10px rgba(0,0,0,0.5);
+      border: 1.5px solid rgba(255,255,255,0.35);
+      opacity: 0;
+      animation: whalePop 0.45s cubic-bezier(0.34,1.9,0.64,1) 0.2s forwards,
+                 whalePulse 1s ease-in-out 0.7s infinite alternate;
+    }
+    @keyframes whalePop {
+      from { opacity:0; transform: translateX(-50%) scale(0.3) rotate(-8deg); }
+      to   { opacity:1; transform: translateX(-50%) scale(1)   rotate(0deg); }
+    }
+    @keyframes whalePulse {
+      from { box-shadow: 0 0 12px rgba(139,92,246,0.7); }
+      to   { box-shadow: 0 0 28px rgba(192,132,252,1.0), 0 0 52px rgba(255,215,0,0.4); }
+    }
+
+    /* ════════════════════════════════════
+   CENTURY BURST EFFECTS  (100+ boost)
+════════════════════════════════════ */
+    /* (Overlay removed — confetti, rings, shake and badge only) */
+    #century-placeholder {
+      display: none; /* placeholder — not used */
+    }
+
+    /* Firework confetti particle */
+    .century-particle {
+      position: fixed;
+      top: -20px;
+      width: var(--cp-w, 8px);
+      height: var(--cp-h, 14px);
+      border-radius: var(--cp-r, 3px);
+      background: var(--cp-color, #ffd700);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 2001;
+      animation: centuryFall var(--cp-dur, 2.2s) cubic-bezier(0.33,0,0.66,1) var(--cp-delay, 0s) forwards;
+      transform-origin: center;
+    }
+    @keyframes centuryFall {
+      0%   { opacity:0; transform: translateY(0) rotate(var(--cp-rot0,0deg)) scale(0); }
+      8%   { opacity:1; transform: translateY(10vh) rotate(var(--cp-rot0,0deg)) scale(1); }
+      100% { opacity:0.15; transform: translateY(110vh) rotate(var(--cp-rot1,360deg)) scale(0.5); }
+    }
+
+    /* Ripple ring bursting from centre */
+    .century-ring {
+      position: fixed;
+      border-radius: 50%;
+      border: 4px solid var(--cr-color, rgba(255,215,0,0.9));
+      pointer-events: none;
+      z-index: 1999;
+      animation: centuryRing var(--cr-dur, 1.1s) ease-out var(--cr-delay,0s) forwards;
+    }
+    @keyframes centuryRing {
+      0%   { opacity:0.95; transform: scale(0); }
+      100% { opacity:0;    transform: scale(1); }
+    }
+
+    /* Century badge on the gift card */
+    .century-badge {
+      position: absolute;
+      top: -18px;
+      right: 18px;
+      background: linear-gradient(135deg, #ffd700, #ff9a3c);
+      color: #1a0a00;
+      font-family: 'Bebas Neue', cursive;
+      font-size: 15px;
+      letter-spacing: 2.5px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      z-index: 10;
+      pointer-events: none;
+      box-shadow: 0 0 18px rgba(255,215,0,0.9), 0 3px 10px rgba(0,0,0,0.5);
+      border: 2px solid rgba(255,255,255,0.4);
+      animation: centuryBadgePop 0.5s cubic-bezier(0.34,1.9,0.64,1) forwards,
+                 centuryBadgePulse 0.8s ease-in-out 0.5s infinite alternate;
+      white-space: nowrap;
+    }
+    @keyframes centuryBadgePop {
+      from { opacity:0; transform: scale(0) rotate(-15deg); }
+      to   { opacity:1; transform: scale(1) rotate(0deg); }
+    }
+    @keyframes centuryBadgePulse {
+      from { box-shadow: 0 0 14px rgba(255,215,0,0.7); }
+      to   { box-shadow: 0 0 32px rgba(255,180,0,1.0), 0 0 60px rgba(255,120,0,0.5); }
     }
   </style>
 </head>
@@ -892,6 +1059,8 @@
 
     <button onclick="testSingle()">🎭 Test Single Gift</button>
     <button class="streak-btn" onclick="testStreakLocal()">🔥 Test Streak x50</button>
+    <button class="streak-btn" onclick="testCentury()" style="background:linear-gradient(135deg,#ffd700,#ff6b00);color:#1a0a00;">💯 Test Century x100</button>
+    <button class="streak-btn" onclick="testBigGift()" style="background:linear-gradient(135deg,#8b5cf6,#ffd700);">🐳 Test 500 Coin Gift</button>
     <button class="connect-btn" onclick="connectProxy()">▶ Connect to Railway</button>
 
     <div style="margin-top:10px">
@@ -1140,6 +1309,79 @@
         o3.start(t + 0.1); o3.stop(t + 0.5);
       },
     };
+    // ─── Epic Century sound: multi-layer orchestral hit + rising shimmer
+    function playCenturySound() {
+      if (!SOUND_ENABLED) return;
+      const ctx = getACtx(), t = ctx.currentTime;
+      // Bass thud
+      const b = ctx.createOscillator(), bg = ctx.createGain();
+      b.connect(bg); bg.connect(ctx.destination); b.type = 'sine';
+      b.frequency.setValueAtTime(55, t); b.frequency.exponentialRampToValueAtTime(35, t+0.35);
+      bg.gain.setValueAtTime(SOUND_VOL*0.6, t); bg.gain.exponentialRampToValueAtTime(0.001, t+0.55);
+      b.start(t); b.stop(t+0.6);
+      // Mid brass chord
+      [196, 247, 294, 370].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain(), fi = ctx.createBiquadFilter();
+        fi.type = 'lowpass'; fi.frequency.value = 2200;
+        o.connect(fi); fi.connect(g); g.connect(ctx.destination); o.type = 'sawtooth';
+        o.frequency.setValueAtTime(f, t + i*0.025);
+        g.gain.setValueAtTime(0, t+i*0.025); g.gain.linearRampToValueAtTime(SOUND_VOL*0.13, t+i*0.025+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t+0.7+i*0.08); o.start(t+i*0.025); o.stop(t+0.9);
+      });
+      // Rising shimmer sweep
+      const s = ctx.createOscillator(), sg = ctx.createGain();
+      s.connect(sg); sg.connect(ctx.destination); s.type = 'sine';
+      s.frequency.setValueAtTime(600, t+0.05); s.frequency.exponentialRampToValueAtTime(4000, t+0.65);
+      sg.gain.setValueAtTime(0, t+0.05); sg.gain.linearRampToValueAtTime(SOUND_VOL*0.14, t+0.1);
+      sg.gain.exponentialRampToValueAtTime(0.001, t+0.75); s.start(t+0.05); s.stop(t+0.8);
+      // Bright victory note sequence
+      [784, 988, 1175, 1568, 2093].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination); o.type = 'sine';
+        o.frequency.value = f;
+        const d2 = t + 0.18 + i*0.09;
+        g.gain.setValueAtTime(0, d2); g.gain.linearRampToValueAtTime(SOUND_VOL*0.11, d2+0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, d2+0.22); o.start(d2); o.stop(d2+0.25);
+      });
+    }
+
+    // ─── Big Gift sound: dramatic purple-gold rising chord + shimmer
+    function playBigGiftSound() {
+      if (!SOUND_ENABLED) return;
+      const ctx = getACtx(), t = ctx.currentTime;
+      // Deep sub-bass pulse
+      const sub = ctx.createOscillator(), sg = ctx.createGain();
+      sub.connect(sg); sg.connect(ctx.destination); sub.type = 'sine';
+      sub.frequency.setValueAtTime(80, t); sub.frequency.exponentialRampToValueAtTime(50, t + 0.3);
+      sg.gain.setValueAtTime(SOUND_VOL * 0.5, t); sg.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+      sub.start(t); sub.stop(t + 0.5);
+      // Purple synth chord (minor third feel)
+      [220, 277, 330, 415, 554].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain(), fi = ctx.createBiquadFilter();
+        fi.type = 'lowpass'; fi.frequency.value = 2600;
+        o.connect(fi); fi.connect(g); g.connect(ctx.destination); o.type = 'sawtooth';
+        o.frequency.setValueAtTime(f, t + i * 0.04);
+        g.gain.setValueAtTime(0, t + i * 0.04);
+        g.gain.linearRampToValueAtTime(SOUND_VOL * 0.10, t + i * 0.04 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.55 + i * 0.07);
+        o.start(t + i * 0.04); o.stop(t + 0.75);
+      });
+      // Golden shimmer sweep
+      const sw = ctx.createOscillator(), swg = ctx.createGain();
+      sw.connect(swg); swg.connect(ctx.destination); sw.type = 'sine';
+      sw.frequency.setValueAtTime(800, t + 0.08); sw.frequency.exponentialRampToValueAtTime(3200, t + 0.55);
+      swg.gain.setValueAtTime(0, t + 0.08); swg.gain.linearRampToValueAtTime(SOUND_VOL * 0.12, t + 0.14);
+      swg.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+      sw.start(t + 0.08); sw.stop(t + 0.7);
+      // Bright ding on top
+      const ding = ctx.createOscillator(), dg = ctx.createGain();
+      ding.connect(dg); dg.connect(ctx.destination); ding.type = 'sine';
+      ding.frequency.value = 2637;
+      dg.gain.setValueAtTime(0, t + 0.05); dg.gain.linearRampToValueAtTime(SOUND_VOL * 0.14, t + 0.07);
+      dg.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+      ding.start(t + 0.05); ding.stop(t + 0.5);
+    }
+
     function playGiftSound(coins) {
       if (!SOUND_ENABLED) return;
       const vol = SOUND_VOL;
@@ -1282,6 +1524,11 @@
     // Track live streak cards: streakKey → { card, lastTier }
     const streakCards = new Map();
 
+    // Buffer for boost/streak gifts — holds latest data until gift_end fires
+    // streakKey → { username, giftName, giftId, count, coins, pictureUrl, streakKey, timer }
+    const pendingStreaks = new Map();
+    const STREAK_TIMEOUT_MS = 10000; // safety fallback if gift_end never arrives
+
     function enqueue(data) { queue.push(data); processQueue(); }
     function processQueue() {
       while (activeAlerts < MAX_VISIBLE_OVERRIDE && queue.length > 0) showAlert(queue.shift());
@@ -1290,11 +1537,14 @@
     /* ═══════════════════════════════════════
        SHOW ALERT  (creates a new card)
     ═══════════════════════════════════════ */
-    function showAlert({ username, giftName, giftId = '', count = 1, coins, pictureUrl = '', streakKey = '' }) {
+    const BIG_GIFT_THRESHOLD = 500;
+
+    function showAlert({ username, giftName, giftId = '', count = 1, coins, pictureUrl = '', streakKey = '', isCentury = false }) {
       const d = dur();
       const holdMs = (d - 0.45) * 1000;
       const info = getGiftInfo(giftName, giftId);
       const total = coins || (info.coins * count);
+      const isBigGift = total >= BIG_GIFT_THRESHOLD && !isCentury; // century already has its own show
       // Use DB image as additional fallback
       const finalPic = pictureUrl || info.liveImg || '';
 
@@ -1303,10 +1553,11 @@
       flash.classList.add('active');
       setTimeout(() => flash.classList.remove('active'), 180);
 
-      // Sound: Power Up once for streak start, normal tier sound for single gifts
+      // Sound: Big Gift gets its own dramatic sound; century already played its own; use streak/normal for others
       if (SOUND_ENABLED) {
-        if (streakKey) SOUNDS[SOUND_MAP.streak]?.(SOUND_VOL);
-        else playGiftSound(total);
+        if (isBigGift)       playBigGiftSound();
+        else if (streakKey)  SOUNDS[SOUND_MAP.streak]?.(SOUND_VOL);
+        else                 playGiftSound(total);
       }
 
       const container = document.getElementById('alert-container');
@@ -1331,13 +1582,32 @@
         ? `<img class="gift-img" src="${esc(finalPic)}" alt="${esc(giftName)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><span class="gift-emoji-fallback" style="display:none">${info.emoji}</span>`
         : `<span>${info.emoji}</span>`;
 
-      // NEW GIFT badge for unrecognized gifts
+      // CENTURY badge (top-right)
+      const centuryBadge = isCentury
+        ? `<div class="century-badge">💯 CENTURY</div>`
+        : '';
+
+      // WHALE badge (top-centre) for 500+ coin single gifts
+      const whaleBadge = isBigGift
+        ? `<div class="whale-badge">🐳 WHALE GIFT</div>`
+        : '';
+
+      // NEW GIFT badge for unrecognized gifts (top-left)
       const newGiftBadge = info.isNew
         ? `<div class="new-gift-badge">🆕 NEW GIFT</div>`
         : '';
 
+      // Century cards get a golden glow override; Big Gift gets purple-gold glow
+      if (isCentury) {
+        card.style.boxShadow = '0 0 0 3px rgba(255,215,0,0.9), 0 16px 100px rgba(255,180,0,0.65), inset 0 1px 0 rgba(255,255,255,0.2)';
+      } else if (isBigGift) {
+        card.style.boxShadow = '0 0 0 2.5px rgba(192,132,252,0.9), 0 16px 80px rgba(139,92,246,0.55), 0 0 50px rgba(255,215,0,0.25), inset 0 1px 0 rgba(255,255,255,0.15)';
+      }
+
       card.innerHTML += `
     <div class="tiktok-mark">TIKTOK LIVE</div>
+    ${centuryBadge}
+    ${whaleBadge}
     ${newGiftBadge}
     <div class="alert-icon">
       ${imgHtml}
@@ -1357,6 +1627,10 @@
 
       container.appendChild(card);
       addFire(card, total);
+
+      // Big Gift visual burst (runs after layout so getBoundingClientRect() works)
+      if (isBigGift) requestAnimationFrame(() => fireBigGiftEffect(card, total));
+
       // Streak milestone effects are fired via updateStreakCard as count grows
       activeAlerts++;
 
@@ -1458,48 +1732,79 @@
         } catch (err) { console.warn('[SSE] gift_db parse error', err); }
       });
 
-      // New gift → create card
+      // New gift → if it's a streak/boost, buffer it; otherwise show immediately
       evtSource.addEventListener('gift', e => {
         console.log('[SSE] gift received:', e.data);
         try {
           const d = JSON.parse(e.data);
-          enqueue({
-            username: d.nickname || d.uniqueId || 'Someone',
-            giftName: d.giftName || 'Gift',
-            giftId: d.giftId || '',
-            count: d.count || 1,
-            coins: d.coins || null,
-            pictureUrl: d.pictureUrl || '',
-            streakKey: d.streakKey || '',
-          });
+          const sk = d.streakKey || '';
+          if (sk) {
+            // Boost gift — buffer and wait for gift_end
+            bufferStreakGift({
+              username: d.nickname || d.uniqueId || 'Someone',
+              giftName: d.giftName || 'Gift',
+              giftId: d.giftId || '',
+              count: d.count || 1,
+              coins: d.coins || null,
+              pictureUrl: d.pictureUrl || '',
+              streakKey: sk,
+            });
+          } else {
+            // Single gift — show right away
+            enqueue({
+              username: d.nickname || d.uniqueId || 'Someone',
+              giftName: d.giftName || 'Gift',
+              giftId: d.giftId || '',
+              count: d.count || 1,
+              coins: d.coins || null,
+              pictureUrl: d.pictureUrl || '',
+              streakKey: '',
+            });
+          }
         } catch (err) { console.warn('[SSE] gift parse error', err); }
       });
 
-      // Streak tick → update existing card live
+      // Streak tick → update buffered data silently (card not shown yet)
       evtSource.addEventListener('gift_update', e => {
         console.log('[SSE] gift_update received:', e.data);
         try {
           const d = JSON.parse(e.data);
-          updateStreakCard({
-            streakKey: d.streakKey,
-            count: d.count,
-            coins: d.coins,
-            giftName: d.giftName || 'Gift',
-          });
+          const sk = d.streakKey;
+          if (sk && pendingStreaks.has(sk)) {
+            // Update the buffered entry with latest count/coins
+            const entry = pendingStreaks.get(sk);
+            entry.count = d.count || entry.count;
+            entry.coins = d.coins || entry.coins;
+            if (d.giftName) entry.giftName = d.giftName;
+          } else if (sk) {
+            // Card is already on screen — update it live (shouldn't happen in new flow,
+            // but kept as a safety net)
+            updateStreakCard({
+              streakKey: sk,
+              count: d.count,
+              coins: d.coins,
+              giftName: d.giftName || 'Gift',
+            });
+          }
         } catch (err) { console.warn('[SSE] gift_update parse error', err); }
       });
 
-      // Streak ended — just a signal, card already updating via gift_update
+      // Streak ended — now show the alert with the final total
       evtSource.addEventListener('gift_end', e => {
         try {
           const d = JSON.parse(e.data);
-          const card = streakCards.get(d.streakKey);
-          if (card && d.count >= 10) {
-            // Make sure final count is shown
-            const badge = card.querySelector('.count-badge');
-            if (badge) badge.textContent = `×${d.count}`;
-            const coinEl = card.querySelector('.coin-value');
-            if (coinEl) coinEl.textContent = fmtCoins(d.coins);
+          const sk = d.streakKey;
+          if (sk && pendingStreaks.has(sk)) {
+            flushStreakGift(sk, d.count, d.coins);
+          } else {
+            // Card already on screen — just update the final numbers
+            const entry = streakCards.get(sk);
+            if (entry) {
+              const badge = entry.card.querySelector('.count-badge');
+              if (badge) badge.textContent = `×${d.count}`;
+              const coinEl = entry.card.querySelector('.coin-value');
+              if (coinEl) coinEl.textContent = fmtCoins(d.coins);
+            }
           }
         } catch (err) { console.warn('[SSE] gift_end parse error', err); }
       });
@@ -1522,21 +1827,63 @@
       enqueue({ ...g, streakKey: '' });
     }
 
+    // Test 500-coin Big Gift
+    function testBigGift() {
+      const g = {
+        username: 'WhaleKing',
+        giftName: 'Crown',
+        giftId: '',
+        count: 1,
+        coins: 500,
+        pictureUrl: '',
+        streakKey: '',
+      };
+      enqueue(g);
+    }
+
+    // Test 100-boost Century mode
+    function testCentury() {
+      const streakKey = `century_${Date.now()}`;
+      const giftName = 'Rose';
+      const pictureUrl = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png';
+      const finalCount = 100;
+      bufferStreakGift({ username: 'CenturyKing', giftName, count: 1, coins: 1, pictureUrl, streakKey });
+      let step = 2;
+      const iv = setInterval(() => {
+        if (step > finalCount) {
+          clearInterval(iv);
+          flushStreakGift(streakKey, finalCount, finalCount);
+          return;
+        }
+        const entry = pendingStreaks.get(streakKey);
+        if (entry) { entry.count = step; entry.coins = step; }
+        step++;
+      }, 40);
+    }
+
     // Simulate a live streak locally (no server needed)
+    // Mirrors the new buffered flow: buffer → updates → gift_end → show alert
     function testStreakLocal() {
       const streakKey = `local_${Date.now()}`;
       const giftName = 'Rose';
       const pictureUrl = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png';
       const finalCount = 50;
 
-      // Step 1: create card with count=1
-      enqueue({ username: 'StreakMaster', giftName, count: 1, coins: 1, pictureUrl, streakKey });
+      // Step 1: buffer with count=1 (like a real gift event)
+      bufferStreakGift({ username: 'StreakMaster', giftName, count: 1, coins: 1, pictureUrl, streakKey });
 
-      // Step 2: stream updates every 80ms
+      // Step 2: stream silent updates every 80ms (like real gift_update events)
       let step = 2;
       const iv = setInterval(() => {
-        if (step > finalCount) { clearInterval(iv); return; }
-        updateStreakCard({ streakKey, count: step, coins: step, giftName });
+        if (step > finalCount) {
+          clearInterval(iv);
+          // Step 3: gift_end fires — NOW show the alert with final count
+          flushStreakGift(streakKey, finalCount, finalCount);
+          return;
+        }
+        // Update buffered entry silently
+        const entry = pendingStreaks.get(streakKey);
+        if (entry) { entry.count = step; entry.coins = step; }
         step++;
       }, 80);
     }
@@ -1550,6 +1897,209 @@
     else if (!urlProxy && window.location.port) setTimeout(connectProxy, 500);
 
     /* ═══════════════════════════════════════
+       BOOST GIFT BUFFERING
+       Hold streak/boost gifts until gift_end fires,
+       then reveal the alert with the final count.
+    ═══════════════════════════════════════ */
+    function bufferStreakGift(data) {
+      const { streakKey } = data;
+      if (pendingStreaks.has(streakKey)) {
+        // Already buffered — just update the latest data
+        const entry = pendingStreaks.get(streakKey);
+        entry.count = data.count;
+        entry.coins = data.coins;
+        return;
+      }
+      // First time seeing this streakKey — store it and set a safety timer
+      const timer = setTimeout(() => {
+        // gift_end never arrived — show what we have as a fallback
+        flushStreakGift(streakKey, null, null);
+      }, STREAK_TIMEOUT_MS);
+      pendingStreaks.set(streakKey, { ...data, timer });
+    }
+
+    /* Century threshold — configurable from dashboard */
+    let CENTURY_THRESHOLD = 100;
+
+    function flushStreakGift(streakKey, finalCount, finalCoins) {
+      const entry = pendingStreaks.get(streakKey);
+      if (!entry) return;
+      clearTimeout(entry.timer);
+      pendingStreaks.delete(streakKey);
+
+      // Use final values from gift_end if available; fall back to last buffered update
+      const count = finalCount != null ? finalCount : entry.count;
+      const coins = finalCoins != null ? finalCoins : entry.coins;
+
+      // Fire CENTURY BURST if the final boost count hits the threshold
+      if (count >= CENTURY_THRESHOLD) {
+        fireCenturyBurst(count, entry.giftName || 'Gift');
+      }
+
+      // Now enqueue the alert — card is shown AFTER boost is complete
+      // Pass centuryCount so the card can display the badge
+      enqueue({ ...entry, count, coins, streakKey: '', isCentury: count >= CENTURY_THRESHOLD });
+    }
+
+    /* ═══════════════════════════════════════
+       BIG GIFT EFFECT  —  500+ coin visual celebration
+    ═══════════════════════════════════════ */
+    function fireBigGiftEffect(card, total) {
+      // ── 1. Gold shimmer sweep across the card ──
+      const sweep = document.createElement('div');
+      sweep.className = 'big-gift-sweep';
+      // Insert BEFORE other children so it's behind content but inside card
+      card.insertBefore(sweep, card.firstChild);
+      setTimeout(() => sweep.remove(), 1200);
+
+      // ── 2. Orbiting sparkle dots around the icon ──
+      const icon = card.querySelector('.alert-icon');
+      if (icon) {
+        const DOT_COLORS = ['#ffd700','#c084fc','#fff700','#ff9a3c','#00cfff','#ff80ab'];
+        const DOT_SIZES  = [5, 7, 4, 6, 5, 8];
+        const DOT_RADII  = [52, 60, 48, 57, 50, 63];
+        const BASE_DUR   = 2.3;
+        for (let i = 0; i < 6; i++) {
+          const dot = document.createElement('div');
+          dot.className = 'orbit-dot';
+          const dotDur = BASE_DUR + (i % 3) * 0.3;
+          // negative delay offsets the starting angle: fraction * duration = time into animation
+          const startFraction = i / 6; // 0, 0.167, 0.333, 0.5, 0.667, 0.833
+          dot.style.cssText = [
+            `--od-size:${DOT_SIZES[i]}px`,
+            `--od-color:${DOT_COLORS[i]}`,
+            `--od-r:${DOT_RADII[i]}px`,
+            `--od-dur:${dotDur}s`,
+            `--od-delay:-${(startFraction * dotDur).toFixed(2)}s`
+          ].join(';');
+          icon.appendChild(dot);
+        }
+        // Dots are removed automatically when the card is removed
+      }
+
+      // ── 3. Coin burst — 20 particles fly outward from card centre ──
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width  / 2;
+      const cy = rect.top  + rect.height / 2;
+      const COIN_COUNT = total >= 1000 ? 32 : 20;
+      for (let i = 0; i < COIN_COUNT; i++) {
+        const coin = document.createElement('div');
+        coin.className = 'big-coin-p';
+        const angle   = (Math.PI * 2 * i / COIN_COUNT) + (Math.random() - 0.5) * 0.6;
+        const dist    = 70 + Math.random() * 110;
+        const tx      = Math.cos(angle) * dist;
+        const ty      = Math.sin(angle) * dist + 40; // gravity offset pulls down
+        const dur2    = 0.65 + Math.random() * 0.55;
+        const delay   = Math.random() * 0.2;
+        const spin    = 180 + Math.random() * 360;
+        coin.style.cssText = [
+          `left:${cx}px`,
+          `top:${cy}px`,
+          `--bc-tx:${tx}px`,
+          `--bc-ty:${ty}px`,
+          `--bc-dur:${dur2}s`,
+          `--bc-delay:${delay}s`,
+          `--bc-spin:${spin}deg`
+        ].join(';');
+        document.body.appendChild(coin);
+        setTimeout(() => coin.remove(), (dur2 + delay) * 1000 + 200);
+      }
+
+      // ── 4. Extra shockwave ring from the card itself ──
+      for (let i = 0; i < 2; i++) {
+        const sw = document.createElement('div');
+        sw.className = 'shockwave';
+        sw.style.cssText = `--sw-color:#c084fc;--sw-dur:${0.7 + i * 0.2}s;animation-delay:${i * 0.15}s;`;
+        card.appendChild(sw);
+        setTimeout(() => sw.remove(), 1200);
+      }
+
+      // ── 5. Screen flash (purple tint) ──
+      const flash = document.getElementById('flash');
+      flash.style.background = 'radial-gradient(circle at 75% 55%, rgba(139,92,246,0.32), rgba(255,215,0,0.14) 50%, transparent 72%)';
+      flash.style.transition = 'opacity 0.07s ease';
+      flash.classList.add('active');
+      setTimeout(() => { flash.classList.remove('active'); flash.style.background = ''; }, 300);
+    }
+
+    /* ═══════════════════════════════════════
+       CENTURY BURST  —  full-screen celebration
+    ═══════════════════════════════════════ */
+    const CONFETTI_COLORS = [
+      '#ffd700','#ff9a3c','#ff2d55','#ff6b00',
+      '#fff700','#ffffff','#ff80ab','#00cfff',
+      '#c084fc','#00d26a'
+    ];
+
+    function fireCenturyBurst(count, giftName) {
+      playCenturySound();
+
+      // ── Screen shake (multiple waves) ──
+      const cont = document.getElementById('alert-container');
+      [0, 150, 320].forEach(delay => {
+        setTimeout(() => {
+          cont.classList.add('shake');
+          setTimeout(() => cont.classList.remove('shake'), 520);
+        }, delay);
+      });
+
+      // ── Radial flash ──
+      const flash = document.getElementById('flash');
+      flash.style.background = 'radial-gradient(ellipse at center, rgba(255,215,0,0.45), rgba(255,100,0,0.25) 50%, transparent 75%)';
+      flash.style.transition = 'opacity 0.06s ease';
+      flash.classList.add('active');
+      setTimeout(() => { flash.classList.remove('active'); flash.style.background = ''; }, 350);
+
+      // ── Concentric shockwave rings (from screen centre) ──
+      const ringColors = ['rgba(255,215,0,0.9)','rgba(255,160,0,0.7)','rgba(255,80,0,0.5)','rgba(255,220,0,0.4)'];
+      ringColors.forEach((color, i) => {
+        const ring = document.createElement('div');
+        ring.className = 'century-ring';
+        const size = 80 + i * 60;
+        ring.style.cssText = [
+          `left:calc(50% - ${size/2}px)`,
+          `top:calc(50% - ${size/2}px)`,
+          `width:${size}px`,
+          `height:${size}px`,
+          `--cr-color:${color}`,
+          `--cr-dur:${0.9 + i * 0.18}s`,
+          `--cr-delay:${i * 0.1}s`
+        ].join(';');
+        document.body.appendChild(ring);
+        setTimeout(() => ring.remove(), (0.9 + i*0.18 + i*0.1) * 1000 + 200);
+      });
+
+      // ── 80 Confetti/firework particles ──
+      const count2 = count >= 200 ? 120 : 80;
+      for (let i = 0; i < count2; i++) {
+        const p = document.createElement('div');
+        p.className = 'century-particle';
+        const color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+        const w = 5 + Math.random() * 9;
+        const h = w * (0.5 + Math.random() * 1.8);
+        const isCircle = Math.random() > 0.65;
+        const xPos = 2 + Math.random() * 96; // % across screen
+        const rot0 = (Math.random() - 0.5) * 180;
+        const rot1 = rot0 + 180 + (Math.random() - 0.5) * 360;
+        const duration = 1.5 + Math.random() * 1.8;
+        const delay = Math.random() * 0.9;
+        p.style.cssText = [
+          `left:${xPos}vw`,
+          `--cp-w:${w}px`,
+          `--cp-h:${isCircle ? w : h}px`,
+          `--cp-r:${isCircle ? '50%' : '3px'}`,
+          `--cp-color:${color}`,
+          `--cp-dur:${duration}s`,
+          `--cp-delay:${delay}s`,
+          `--cp-rot0:${rot0}deg`,
+          `--cp-rot1:${rot1}deg`
+        ].join(';');
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), (duration + delay) * 1000 + 200);
+      }
+    }
+
+    /* ═══════════════════════════════════════
        DASHBOARD SYNC (postMessage from dashboard.html)
     ═══════════════════════════════════════ */
     window.addEventListener('message', e => {
@@ -1561,26 +2111,49 @@
       }
       if (msg.type === 'HACKY_GIFT') {
         const d = msg.gift;
-        enqueue({
-          username: d.nickname || d.uniqueId || 'Someone',
-          giftName: d.giftName || 'Gift',
-          count: d.count || 1,
-          coins: d.coins || null,
-          pictureUrl: d.pictureUrl || '',
-          streakKey: d.streakKey || '',
-        });
+        const sk = d.streakKey || '';
+        if (sk) {
+          bufferStreakGift({
+            username: d.nickname || d.uniqueId || 'Someone',
+            giftName: d.giftName || 'Gift',
+            count: d.count || 1,
+            coins: d.coins || null,
+            pictureUrl: d.pictureUrl || '',
+            streakKey: sk,
+          });
+        } else {
+          enqueue({
+            username: d.nickname || d.uniqueId || 'Someone',
+            giftName: d.giftName || 'Gift',
+            count: d.count || 1,
+            coins: d.coins || null,
+            pictureUrl: d.pictureUrl || '',
+            streakKey: '',
+          });
+        }
       }
       if (msg.type === 'HACKY_GIFT_UPDATE') {
-        updateStreakCard(msg.data);
+        const d = msg.data;
+        if (d.streakKey && pendingStreaks.has(d.streakKey)) {
+          const entry = pendingStreaks.get(d.streakKey);
+          entry.count = d.count || entry.count;
+          entry.coins = d.coins || entry.coins;
+        } else {
+          updateStreakCard(msg.data);
+        }
       }
       if (msg.type === 'HACKY_GIFT_END') {
         const d = msg.data;
-        const card = streakCards.get(d.streakKey);
-        if (card) {
-          const badge = card.querySelector('.count-badge');
-          if (badge) badge.textContent = `×${d.count}`;
-          const coinEl = card.querySelector('.coin-value');
-          if (coinEl) coinEl.textContent = fmtCoins(d.coins);
+        if (d.streakKey && pendingStreaks.has(d.streakKey)) {
+          flushStreakGift(d.streakKey, d.count, d.coins);
+        } else {
+          const entry = streakCards.get(d.streakKey);
+          if (entry) {
+            const badge = entry.card.querySelector('.count-badge');
+            if (badge) badge.textContent = `×${d.count}`;
+            const coinEl = entry.card.querySelector('.coin-value');
+            if (coinEl) coinEl.textContent = fmtCoins(d.coins);
+          }
         }
       }
     });
