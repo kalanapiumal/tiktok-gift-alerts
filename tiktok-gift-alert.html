@@ -1438,7 +1438,7 @@
     // Buffer for boost/streak gifts — holds latest data until gift_end fires
     // streakKey → { username, giftName, giftId, count, coins, pictureUrl, streakKey, timer }
     const pendingStreaks = new Map();
-    const STREAK_TIMEOUT_MS = 15000; // safety fallback if gift_end never arrives, increased to match server
+    const STREAK_TIMEOUT_MS = 60000; // safety fallback if gift_end never arrives, increased for long boosts
 
     function enqueue(data) { queue.push(data); processQueue(); }
     function processQueue() {
