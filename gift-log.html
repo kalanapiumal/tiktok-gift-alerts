@@ -253,7 +253,7 @@
         <div class="gift-img-wrap">${imgContent}</div>
         <div class="gift-info">
           <div class="gift-name">${esc(giftName)}</div>
-          <div class="gifter-name">${esc(username)}</div>
+          <div class="gifter-name"><span style="opacity:0.4;font-weight:400">@</span>${esc(username)}</div>
         </div>
         <div class="gift-coins">${COIN_SVG}${fmtCoins(coins)}</div>
         <div class="gift-time">${fmtTime(new Date())}</div>
