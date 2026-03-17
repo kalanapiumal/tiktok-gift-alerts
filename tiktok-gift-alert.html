@@ -1454,7 +1454,7 @@
       const holdMs = (d - 0.45) * 1000;
       const info = getGiftInfo(giftName, giftId);
       const total = coins || (info.coins * count);
-      const isBigGift = total >= BIG_GIFT_THRESHOLD && !isCentury; // century already has its own show
+      const isBigGift = total >= BIG_GIFT_THRESHOLD; // triggers for all high value gifts
       // Use DB image as additional fallback
       const finalPic = pictureUrl || info.liveImg || '';
 
@@ -1563,14 +1563,14 @@
           if (cur >= count) {
             clearInterval(itv);
             streakCards.delete(tempKey);
-            // Century burst at the end of rollup
-            if (isCentury) requestAnimationFrame(() => fireCenturyBurst(count, giftName));
+            // Epic burst at the end of rollup if high value
+            if (total >= 500) requestAnimationFrame(() => fireEpicBurst(count, giftName));
           }
         }, rollupInterval);
 
       } else {
-        // Single gift Century burst
-        if (isCentury) requestAnimationFrame(() => fireCenturyBurst(count, giftName));
+        // Single gift Epic burst if high value
+        if (total >= 500) requestAnimationFrame(() => fireEpicBurst(count, giftName));
       }
 
       activeAlerts++;
@@ -1968,7 +1968,7 @@
     }
 
     /* ═══════════════════════════════════════
-       CENTURY BURST  —  full-screen celebration
+       EPIC BURST  —  full-screen celebration for 500+ coins
     ═══════════════════════════════════════ */
     const CONFETTI_COLORS = [
       '#ffd700','#ff9a3c','#ff2d55','#ff6b00',
@@ -1976,8 +1976,8 @@
       '#c084fc','#00d26a'
     ];
 
-    function fireCenturyBurst(count, giftName) {
-      playCenturySound();
+    function fireEpicBurst(count, giftName) {
+      playCenturySound(); // Still use the epic sound
 
       // ── Screen shake (multiple waves) ──
       const cont = document.getElementById('alert-container');
