@@ -499,8 +499,8 @@
 
       100% {
         opacity: 0;
-        transform: scale(1.4);
-        filter: blur(3px);
+        transform: scale(3.5);
+        filter: blur(15px);
       }
     }
 
@@ -1546,16 +1546,31 @@
         const tempKey = 'rollup_' + Math.random();
         streakCards.set(tempKey, { card, lastTier: null });
         
-        // Start count at 1, roll to final
         let cur = 1;
-        const rollupInterval = Math.max(30, Math.min(80, 1200 / count)); 
-        const step = Math.ceil(count / 25);
+        const totalTime = 1400; // Total duration of rollup in ms
+        const steps = Math.min(count, 40); // Number of increments
+        const rollupInterval = totalTime / steps;
+        const countStep = (count - 1) / steps;
+
+        let lastThresholdMet = -1;
 
         const itv = setInterval(() => {
-          cur = Math.min(count, cur + step);
+          const oldCur = cur;
+          cur = Math.min(count, cur + countStep);
+          
+          // Check if we passed any thresholds during this step
+          for (let i = 0; i < STREAK_THRESHOLDS.length; i++) {
+            const t = STREAK_THRESHOLDS[i];
+            if (oldCur < t && cur >= t) {
+              // Force update to the exact threshold first for the "Boom"
+              updateStreakCard({ streakKey: tempKey, count: t, giftName, coins: Math.round((total / count) * t) });
+              lastThresholdMet = i;
+            }
+          }
+
           updateStreakCard({
             streakKey: tempKey,
-            count: cur,
+            count: Math.floor(cur),
             coins: Math.round((total / count) * cur),
             giftName
           });
@@ -1637,7 +1652,6 @@
         const endIdx = tiers.indexOf(newTier);
 
         for (let i = startIdx; i <= endIdx; i++) {
-          const tName = tiers[i];
           const threshold = STREAK_THRESHOLDS[i];
           // Use current count for the combo fly-up if it's the latest, otherwise use threshold
           fireStreakMilestone(card, (i === endIdx) ? count : threshold);
@@ -1645,7 +1659,7 @@
 
         entry.lastTier = newTier;
         streakCards.set(streakKey, entry);
-        if (SOUND_ENABLED) playGiftSound(total);
+        if (SOUND_ENABLED) SOUNDS[SOUND_MAP.streak]?.(SOUND_VOL);
       }
     }
 
