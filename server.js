@@ -219,12 +219,20 @@ const firebaseConfig = {
 
   const auth = firebase.auth();
 
+  // ── AUTHORIZED EMAIL (CHANGE THIS TO YOUR EMAIL) ──
+  const ALLOWED_EMAIL = "kalanapiumal@gmail.com"; 
+
   // Auth State Listener
   auth.onAuthStateChanged(user => {
     document.getElementById('loading-ui').style.display = 'none';
     if (user) {
-      document.getElementById('login-ui').style.display = 'none';
-      document.getElementById('control-ui').style.display = 'block';
+      if (user.email === ALLOWED_EMAIL) {
+        document.getElementById('login-ui').style.display = 'none';
+        document.getElementById('control-ui').style.display = 'block';
+      } else {
+        alert("Access Denied: " + user.email + " is not authorized.");
+        auth.signOut();
+      }
     } else {
       document.getElementById('login-ui').style.display = 'block';
       document.getElementById('control-ui').style.display = 'none';
