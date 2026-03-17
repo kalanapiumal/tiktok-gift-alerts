@@ -16,6 +16,8 @@ const clients = new Set();
 // ── SECURITY ──
 const ADMIN_PIN = String(process.env.ADMIN_PIN || '1122').trim();
 const ALLOWED_EMAIL = String(process.env.ALLOWED_EMAIL || "kalanapiumal258@gmail.com").trim();
+let globalMinCoins = 1; 
+
 // ── Unknown gift tracker
 // Gifts whose names are NOT in the HTML GIFT_DATA will be logged here
 const KNOWN_GIFTS = new Set([
@@ -113,6 +115,14 @@ function renderDashboard() {
   <p>Username: <b>@${TIKTOK_USERNAME}</b></p>
   <p><span class="dot" style="background:${color}"></span>TikTok: <b>${tiktokStatus}</b></p>
   <p>OBS Clients: <b>${clients.size}</b></p>
+  
+  <div style="margin-top:20px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06);">
+    <p>Min Coins for Alert: 
+      <input type="number" id="min-coins" value="${globalMinCoins}" min="1" style="width:70px; display:inline-block; padding:8px; margin:0 8px; flex:none; text-align:center;">
+      <button onclick="saveMinCoins()" style="width:auto; padding:8px 16px; margin:0;">Save</button>
+    </p>
+    <div id="save-msg" style="font-size:12px; color:#00d26a; min-height:18px; margin-top:5px;"></div>
+  </div>
 
   <div class="links">
     <p><a href="/overlay?obs=1" target="_blank">🖥 Overlay URL</a></p>
@@ -253,6 +263,19 @@ app.get('/', (req, res) => {
   function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
   function logout() { localStorage.removeItem('gift_pin'); auth.signOut(); }
   function toggleTest(){ const s = document.getElementById('test-section'); s.style.display = (s.style.display==='block'?'none':'block'); }
+  async function saveMinCoins() {
+    const val = document.getElementById('min-coins').value;
+    const msg = document.getElementById('save-msg');
+    try {
+      const res = await fetch('/api/min-coins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-pin': currentPin },
+        body: JSON.stringify({ minAlertCoins: val })
+      });
+      if(res.ok) { msg.style.color = '#00d26a'; msg.textContent = 'Saved successfully!'; setTimeout(()=>msg.textContent='', 2000); }
+      else throw new Error('Denied');
+    } catch(e) { msg.style.color = '#ff2d55'; msg.textContent = 'Failed to save!'; }
+  }
   async function sendTest(type){
     const r = document.getElementById('result'); r.textContent = 'Triggering...';
     try {
@@ -289,6 +312,12 @@ function checkSecurity(req, res, next) {
   else res.status(403).send('Unauthorized');
 }
 
+app.post('/api/min-coins', checkSecurity, (req, res) => {
+  globalMinCoins = parseInt(req.body.minAlertCoins) || 1;
+  broadcast('config', { minAlertCoins: globalMinCoins });
+  res.send('OK');
+});
+
 // ── SSE stream
 app.get('/events', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
@@ -297,12 +326,15 @@ app.get('/events', (req, res) => {
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
+  clients.add(res);
+  console.log(`[SSE] + client total = ${ clients.size } `);
+  
+  // Send current config to the newly connected client
+  res.write(`event: config\ndata: ${JSON.stringify({ minAlertCoins: globalMinCoins })}\n\n`);
+
   const heartbeat = setInterval(() => {
     try { res.write(': ping\n\n'); } catch (_) { clearInterval(heartbeat); }
   }, 20000);
-
-  clients.add(res);
-  console.log(`[SSE] + client total = ${ clients.size } `);
 
   res.on('close', () => {
     clearInterval(heartbeat);
