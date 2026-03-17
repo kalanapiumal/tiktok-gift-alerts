@@ -990,6 +990,7 @@
     /* ═══════════════════════════════════════
        CONFIG
     ═══════════════════════════════════════ */
+    const params = new URLSearchParams(location.search);
     const OBS_MODE = params.has('obs');
     if (OBS_MODE) document.body.classList.add('obs-mode');
     const urlProxy = params.get('proxy') || '';
@@ -1776,8 +1777,7 @@
       evtSource.onerror = (err) => { console.error('[SSE] Connection error:', err); setStatus('error', 'Connection lost — retrying…'); };
     }
 
-    // Auto-connect on load
-    connectProxy();
+    // Auto-connect on load (moved to end of script for safety)
 
     /* ═══════════════════════════════════════
        LOCAL TEST BUTTONS
@@ -1856,13 +1856,11 @@
 
     function testStreak100() { testStreakLocal(100); }
 
-    /* ═══════════════════════════════════════
-       AUTO-CONNECT
-    ═══════════════════════════════════════ */
-    // Auto-connect in OBS mode (with or without explicit proxy URL — defaults to same origin)
-    if (OBS_MODE) setTimeout(connectProxy, 500);
-    // Also auto-connect when served from same origin without OBS mode (e.g. direct /overlay visit)
-    else if (!urlProxy && window.location.port) setTimeout(connectProxy, 500);
+    // AUTO-CONNECT
+    // Connect immediately if we have a proxy or are in OBS mode
+    if (OBS_MODE || urlProxy || window.location.port) {
+      setTimeout(connectProxy, 300);
+    }
 
     /* ═══════════════════════════════════════
        BOOST GIFT BUFFERING
