@@ -1548,8 +1548,11 @@
         streakCards.set(tempKey, { card, lastTier: null });
         
         let cur = 1;
-        const totalTime = 1400; // Total duration of rollup in ms
-        const steps = Math.min(count, 40); // Number of increments
+        // Balance rollup time: take ~60-70% of alert duration but not more than 4.5s
+        // Speed up for smaller counts, slow down for large ones
+        const totalDurationMs = dur() * 1000;
+        const totalTime = Math.min(totalDurationMs * 0.7, Math.max(1500, count * 45)); 
+        const steps = Math.min(count, 60); // More steps for smoother rollup
         const rollupInterval = totalTime / steps;
         const countStep = (count - 1) / steps;
 
