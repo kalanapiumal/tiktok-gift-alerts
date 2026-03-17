@@ -15,7 +15,7 @@ const clients = new Set();
 
 // ── SECURITY ──
 const ADMIN_PIN = process.env.ADMIN_PIN || '1122'; // Change this or set in Railway env
-const ALLOWED_EMAIL = "kalanapiumal@gmail.com";
+const ALLOWED_EMAIL = process.env.ALLOWED_EMAIL || "kalanapiumal@gmail.com";
 // ── Unknown gift tracker
 // Gifts whose names are NOT in the HTML GIFT_DATA will be logged here
 const KNOWN_GIFTS = new Set([
