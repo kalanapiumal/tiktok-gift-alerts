@@ -203,15 +203,15 @@ app.get('/', (req, res) => {
 </div>
 
 <script>
-  // ── FIREBASE CONFIG (ADD YOURS HERE) ──
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyC1-XQw6s_MEL0r24qslcSDFWlg2kkWaMc",
+  authDomain: "hackytiktok-bcac1.firebaseapp.com",
+  projectId: "hackytiktok-bcac1",
+  storageBucket: "hackytiktok-bcac1.firebasestorage.app",
+  messagingSenderId: "1090815347579",
+  appId: "1:1090815347579:web:0bf32634fd5bee206f8bde"
+};
   
   try {
     firebase.initializeApp(firebaseConfig);
@@ -674,7 +674,7 @@ function connectTikTok() {
             pictureUrl,
           });
         }
-        
+
         // Always send gift_end
         broadcast('gift_end', {
           streakKey,
