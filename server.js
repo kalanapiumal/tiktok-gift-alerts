@@ -472,30 +472,62 @@ function connectTikTok() {
     }
 
     if (isStreakable) {
+      const existing = activeStreaks.get(streakKey);
 
+      // ── 1. If this is the FIRST event for this streak, ALWAYS send the 'gift' event
+      // This ensures the client starts its buffer properly.
+      if (!existing) {
+        broadcast('gift', {
+          streakKey,
+          uniqueId: data.uniqueId,
+          nickname: data.nickname || data.uniqueId || 'Someone',
+          giftName,
+          giftId,
+          count: count, // Use actual count from TikTok (don't hardcode 1)
+          coins: diamondCount * count,
+          pictureUrl,
+          isStreak: true,
+        });
+        console.log(`[Gift] 🔴 Streak START  ${data.nickname} "${giftName}" x${count}`);
+      }
+
+      // ── 2. Handle Mid-streak vs End-streak
       if (!data.repeatEnd) {
         // Mid-streak event
-        const existing = activeStreaks.get(streakKey);
+        if (existing) {
+          // Only broadcast update if count moved forward
+          if (count > existing.count) {
+            broadcast('gift_update', {
+              streakKey,
+              nickname: data.nickname || data.uniqueId || 'Someone',
+              giftName,
+              count,
+              coins: diamondCount * count,
+              pictureUrl,
+            });
+          }
+        }
 
-        if (!existing) {
-          // First event — create the card
-          broadcast('gift', {
-            streakKey,
-            uniqueId: data.uniqueId,
-            nickname: data.nickname || data.uniqueId || 'Someone',
-            giftName,
-            giftId,
-            count: 1,
-            coins: diamondCount,
-            pictureUrl,
-            isStreak: true,
-          });
-          console.log(`[Gift] 🔴 Streak START  ${data.nickname} "${giftName}"`);
-        } else {
-          // Update event — only if count moved forward
-          if (count <= existing.count) return;
-          if (existing.timer) clearTimeout(existing.timer);
+        // Set/reset fallback end timer (increased to 8s - generous for network/user lag)
+        if (existing?.timer) clearTimeout(existing.timer);
+        const timer = setTimeout(() => {
+          const cur = activeStreaks.get(streakKey);
+          if (cur) {
+            broadcast('gift_end', { streakKey, count: cur.count, coins: diamondCount * cur.count });
+            activeStreaks.delete(streakKey);
+            console.log(`[Gift] ⌛ Streak TIMEOUT "${giftName}" x${cur.count}`);
+          }
+        }, 8000);
 
+        activeStreaks.set(streakKey, { count, timer });
+
+      } else {
+        // repeatEnd = true — streak finished
+        if (existing?.timer) clearTimeout(existing.timer);
+        activeStreaks.delete(streakKey);
+
+        // If it was already existing, send final update
+        if (existing && count > existing.count) {
           broadcast('gift_update', {
             streakKey,
             nickname: data.nickname || data.uniqueId || 'Someone',
@@ -505,34 +537,8 @@ function connectTikTok() {
             pictureUrl,
           });
         }
-
-        // Set/reset fallback end timer (in case repeatEnd never fires)
-        const timer = setTimeout(() => {
-          const cur = activeStreaks.get(streakKey);
-          if (cur) {
-            broadcast('gift_end', { streakKey, count: cur.count, coins: diamondCount * cur.count });
-            activeStreaks.delete(streakKey);
-            console.log(`[Gift] ⌛ Streak TIMEOUT "${giftName}" x${cur.count}`);
-          }
-        }, 3500);
-
-        activeStreaks.set(streakKey, { count, timer });
-
-      } else {
-        // repeatEnd = true — streak finished
-        const s = activeStreaks.get(streakKey);
-        if (s?.timer) clearTimeout(s.timer);
-        activeStreaks.delete(streakKey);
-
-        // Push final count update then end
-        broadcast('gift_update', {
-          streakKey,
-          nickname: data.nickname || data.uniqueId || 'Someone',
-          giftName,
-          count,
-          coins: diamondCount * count,
-          pictureUrl,
-        });
+        
+        // Always send gift_end
         broadcast('gift_end', {
           streakKey,
           count,

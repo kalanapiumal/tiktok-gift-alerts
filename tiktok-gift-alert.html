@@ -1527,7 +1527,7 @@
     // Buffer for boost/streak gifts — holds latest data until gift_end fires
     // streakKey → { username, giftName, giftId, count, coins, pictureUrl, streakKey, timer }
     const pendingStreaks = new Map();
-    const STREAK_TIMEOUT_MS = 10000; // safety fallback if gift_end never arrives
+    const STREAK_TIMEOUT_MS = 15000; // safety fallback if gift_end never arrives, increased to match server
 
     function enqueue(data) { queue.push(data); processQueue(); }
     function processQueue() {
@@ -1556,7 +1556,7 @@
       // Sound: Big Gift gets its own dramatic sound; century already played its own; use streak/normal for others
       if (SOUND_ENABLED) {
         if (isBigGift)       playBigGiftSound();
-        else if (streakKey)  SOUNDS[SOUND_MAP.streak]?.(SOUND_VOL);
+        else if (count > 1)  SOUNDS[SOUND_MAP.streak]?.(SOUND_VOL);
         else                 playGiftSound(total);
       }
 
@@ -1611,7 +1611,7 @@
     ${newGiftBadge}
     <div class="alert-icon">
       ${imgHtml}
-      ${count > 1 ? `<div class="count-badge">×${count}</div>` : ''}
+      ${count > 1 ? `<div class="count-badge">×1</div>` : ''}
     </div>
     <div class="alert-body">
       <div class="alert-username">${esc(username)}</div>
@@ -1620,7 +1620,7 @@
     </div>
     <div class="alert-coins">
       <span class="coin-icon">🪙</span>
-      <span class="coin-value">${fmtCoins(total)}</span>
+      <span class="coin-value">${fmtCoins(count > 1 ? Math.round(total / count) : total)}</span>
     </div>
     <div class="alert-progress"></div>
   `;
@@ -1631,7 +1631,38 @@
       // Big Gift visual burst (runs after layout so getBoundingClientRect() works)
       if (isBigGift) requestAnimationFrame(() => fireBigGiftEffect(card, total));
 
-      // Streak milestone effects are fired via updateStreakCard as count grows
+      // STREAK ROLLUP: If it's a boost, count up slowly to reveal milestones
+      if (count > 1) {
+        const tempKey = 'rollup_' + Math.random();
+        streakCards.set(tempKey, { card, lastTier: null });
+        
+        // Start count at 1, roll to final
+        let cur = 1;
+        const rollupInterval = Math.max(30, Math.min(80, 1200 / count)); 
+        const step = Math.ceil(count / 25);
+
+        const itv = setInterval(() => {
+          cur = Math.min(count, cur + step);
+          updateStreakCard({
+            streakKey: tempKey,
+            count: cur,
+            coins: Math.round((total / count) * cur),
+            giftName
+          });
+
+          if (cur >= count) {
+            clearInterval(itv);
+            streakCards.delete(tempKey);
+            // Century burst at the end of rollup
+            if (isCentury) requestAnimationFrame(() => fireCenturyBurst(count, giftName));
+          }
+        }, rollupInterval);
+
+      } else {
+        // Single gift Century burst
+        if (isCentury) requestAnimationFrame(() => fireCenturyBurst(count, giftName));
+      }
+
       activeAlerts++;
 
       setTimeout(() => {
@@ -1687,13 +1718,23 @@
       const coinEl = card.querySelector('.coin-value');
       if (coinEl) coinEl.textContent = fmtCoins(total);
 
-      // Fire milestone effects when a new tier is reached (threshold crossing, not exact match)
-      // This handles cases where a count value is skipped due to network timing
+      // Fire milestone effects when a new tier is reached
       const newTier = getStreakTier(count);
       if (newTier && newTier !== entry.lastTier) {
+        // Ensure we catch ALL intermediate tiers if skipped (e.g. 1 -> 50 jump)
+        const tiers = ['s1', 's2', 's3', 's4'];
+        const startIdx = entry.lastTier ? tiers.indexOf(entry.lastTier) + 1 : 0;
+        const endIdx = tiers.indexOf(newTier);
+
+        for (let i = startIdx; i <= endIdx; i++) {
+          const tName = tiers[i];
+          const threshold = STREAK_THRESHOLDS[i];
+          // Use current count for the combo fly-up if it's the latest, otherwise use threshold
+          fireStreakMilestone(card, (i === endIdx) ? count : threshold);
+        }
+
         entry.lastTier = newTier;
         streakCards.set(streakKey, entry);
-        fireStreakMilestone(card, count);
         if (SOUND_ENABLED) playGiftSound(total);
       }
     }
@@ -1931,13 +1972,8 @@
       const count = finalCount != null ? finalCount : entry.count;
       const coins = finalCoins != null ? finalCoins : entry.coins;
 
-      // Fire CENTURY BURST if the final boost count hits the threshold
-      if (count >= CENTURY_THRESHOLD) {
-        fireCenturyBurst(count, entry.giftName || 'Gift');
-      }
-
       // Now enqueue the alert — card is shown AFTER boost is complete
-      // Pass centuryCount so the card can display the badge
+      // Pass isCentury so the card can display the badge and trigger burst
       enqueue({ ...entry, count, coins, streakKey: '', isCentury: count >= CENTURY_THRESHOLD });
     }
 
