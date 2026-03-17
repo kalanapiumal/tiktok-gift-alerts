@@ -136,7 +136,7 @@ app.get('/', (req, res) => {
 <p>OBS Clients: <b>${clients.size}</b></p>
 
 <div class="links">
-  <p><a href="/overlay">🖥 Overlay URL</a></p>
+  <p><a href="/overlay?obs=1">🖥 Overlay URL</a></p>
   <p><a href="/gift-log">📣 Gift Log</a></p>
   <p><a href="/gift-db">📦 Gift DB</a></p>
   <p><a href="/unknown-gifts">🆕 New Gifts</a></p>
@@ -147,7 +147,8 @@ app.get('/', (req, res) => {
 <div id="test-section">
   <button class="testbtn" onclick="sendTest('normal')">🎭 Single Gift</button>
   <button class="streakbtn" onclick="sendTest('streak')">🔥 Streak x50</button>
-  <button class="centurybtn" onclick="sendTest('century')">💯 Century x100</button>
+  <button class="centurybtn" onclick="sendTest('century')">💯 Century x100 (Epic)</button>
+  <button class="streakbtn" style="background:#ff2d55" onclick="sendTest('streak100')">🔥 Streak x100 (No Epic)</button>
   <button class="whalebtn" onclick="sendTest('whale')">🐳 Whale 500</button>
 </div>
 
@@ -164,6 +165,7 @@ async function sendTest(type){
   try {
     let url = '/test';
     if(type === 'streak') url = '/test-streak';
+    if(type === 'streak100') url = '/test-streak?count=100';
     if(type === 'century') url = '/test-century';
     if(type === 'whale') url = '/test-whale';
     const res = await fetch(url);
@@ -340,7 +342,7 @@ app.get('/test-streak', (req, res) => {
   const giftName = 'Rose';
   const pictureUrl = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png';
   const coinsPer = 1;
-  const finalCount = 50;
+  const finalCount = parseInt(req.query.count) || 50;
 
   // Step 1: create the card with count=1
   broadcast('gift', {

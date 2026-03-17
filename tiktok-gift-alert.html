@@ -1776,6 +1776,9 @@
       evtSource.onerror = (err) => { console.error('[SSE] Connection error:', err); setStatus('error', 'Connection lost — retrying…'); };
     }
 
+    // Auto-connect on load
+    connectProxy();
+
     /* ═══════════════════════════════════════
        LOCAL TEST BUTTONS
     ═══════════════════════════════════════ */
@@ -1827,16 +1830,15 @@
 
     // Simulate a live streak locally (no server needed)
     // Mirrors the new buffered flow: buffer → updates → gift_end → show alert
-    function testStreakLocal() {
+    function testStreakLocal(finalCount = 50) {
       const streakKey = `local_${Date.now()}`;
       const giftName = 'Rose';
       const pictureUrl = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png';
-      const finalCount = 50;
 
       // Step 1: buffer with count=1 (like a real gift event)
       bufferStreakGift({ username: 'StreakMaster', giftName, count: 1, coins: 1, pictureUrl, streakKey });
 
-      // Step 2: stream silent updates every 80ms (like real gift_update events)
+      // Step 2: stream silent updates every 40ms (like real gift_update events)
       let step = 2;
       const iv = setInterval(() => {
         if (step > finalCount) {
@@ -1849,8 +1851,10 @@
         const entry = pendingStreaks.get(streakKey);
         if (entry) { entry.count = step; entry.coins = step; }
         step++;
-      }, 80);
+      }, 40);
     }
+
+    function testStreak100() { testStreakLocal(100); }
 
     /* ═══════════════════════════════════════
        AUTO-CONNECT
