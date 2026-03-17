@@ -14,8 +14,8 @@ let reconnectTimer = null;
 const clients = new Set();
 
 // ── SECURITY ──
-const ADMIN_PIN = process.env.ADMIN_PIN || '1122'; // Change this or set in Railway env
-const ALLOWED_EMAIL = process.env.ALLOWED_EMAIL || "kalanapiumal258@gmail.com";
+const ADMIN_PIN = String(process.env.ADMIN_PIN || '1122').trim();
+const ALLOWED_EMAIL = String(process.env.ALLOWED_EMAIL || "kalanapiumal258@gmail.com").trim();
 // ── Unknown gift tracker
 // Gifts whose names are NOT in the HTML GIFT_DATA will be logged here
 const KNOWN_GIFTS = new Set([
