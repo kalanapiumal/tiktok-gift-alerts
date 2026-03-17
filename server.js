@@ -106,11 +106,34 @@ function broadcast(event, data) {
 app.get('/', (req, res) => {
   const color = tiktokStatus === 'connected' ? '#00d26a' : tiktokStatus === 'connecting' ? '#ffd700' : '#ff2d55';
   res.send(`<!DOCTYPE html>
-<html><head><title>TikTok Gift Proxy</title><meta charset="UTF-8"/>
+<html><head><title>Secure Control — TikTok Gift Proxy</title><meta charset="UTF-8"/>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#0a0a0f;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-  .box{text-align:center;padding:48px 56px;border:1px solid rgba(255,255,255,0.08);border-radius:24px;background:rgba(255,255,255,0.03);width:100%;max-width:480px;backdrop-filter:blur(10px)}
+  body{background:#0a0a0f;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;overflow:hidden}
+  
+  /* Background Animation */
+  body::before {
+    content:''; position:fixed; inset:0; z-index:-1;
+    background: radial-gradient(circle at 20% 30%, rgba(255, 45, 85, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(105, 201, 208, 0.08) 0%, transparent 40%);
+    animation: bgPulse 10s ease-in-out infinite alternate;
+  }
+  @keyframes bgPulse { from { opacity: 0.5; } to { opacity: 1; } }
+
+  .box{text-align:center;padding:48px 56px;border:1px solid rgba(255,255,255,0.08);border-radius:28px;background:rgba(255,255,255,0.03);width:100%;max-width:480px;backdrop-filter:blur(20px);box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);display:none}
+  
+  /* LOGIN UI */
+  #login-ui{display:block}
+  .login-header{margin-bottom:32px}
+  .login-header h1{font-size:32px;color:#fff;margin-bottom:8px;letter-spacing:1px}
+  .login-header p{color:rgba(255,255,255,0.4);font-size:13px}
+  .google-btn{background:#fff;color:#000;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;width:100%;transition:transform 0.2s, background 0.2s}
+  .google-btn:hover{background:#f0f0f0;transform:translateY(-2px)}
+  .google-btn img{width:20px;height:20px}
+
+  /* CONTROL UI */
   h1{font-size:26px;margin-bottom:12px;color:#ff2d55;letter-spacing:1px}
   p{color:rgba(255,255,255,0.5);margin:8px 0;font-size:14px}
   b{color:#fff}
@@ -126,52 +149,115 @@ app.get('/', (req, res) => {
   .centurybtn{background:linear-gradient(135deg,#ffd700,#ff6b00);color:#000;font-weight:bold}
   .whalebtn{background:linear-gradient(135deg,#8b5cf6,#ffd700)}
   button:hover{opacity:0.85}
+  
+  .logout-btn{margin-top:20px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:11px;padding:8px}
+  .logout-btn:hover{color:#ff2d55;border-color:#ff2d55}
+
   #result{margin-top:10px;font-size:12px;color:#00d26a;min-height:18px}
   #test-section{display:none;margin-top:15px;padding-top:15px;border-top:1px dashed rgba(255,255,255,0.1)}
+  
+  #loading-ui{display:block;font-size:14px;color:rgba(255,255,255,0.5)}
 </style>
-</head><body><div class="box">
-<h1>🎁 Gift Alert Control</h1>
-<p>Username: <b>@${TIKTOK_USERNAME}</b></p>
-<p><span class="dot"></span>TikTok: <b>${tiktokStatus}</b></p>
-<p>OBS Clients: <b>${clients.size}</b></p>
+</head><body>
 
-<div class="links">
-  <p><a href="/overlay?obs=1">🖥 Overlay URL</a></p>
-  <p><a href="/gift-log">📣 Gift Log</a></p>
-  <p><a href="/gift-db">📦 Gift DB</a></p>
-  <p><a href="/unknown-gifts">🆕 New Gifts</a></p>
+<div id="loading-ui">Validating Session...</div>
+
+<!-- LOGIN PAGE -->
+<div id="login-ui" class="box">
+  <div class="login-header">
+    <h1>🎁 Secure Access</h1>
+    <p>Please sign in to manage your TikTok Gift Alerts</p>
+  </div>
+  <button class="google-btn" onclick="login()">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G"/>
+    Continue with Google
+  </button>
 </div>
 
-<button class="test-main-btn" onclick="toggleTest()">🛠️ Diagnostic Test Panel</button>
+<!-- CONTROL PANEL -->
+<div id="control-ui" class="box">
+  <h1>🎁 Gift Alert Control</h1>
+  <p>Username: <b>@${TIKTOK_USERNAME}</b></p>
+  <p><span class="dot"></span>TikTok: <b>${tiktokStatus}</b></p>
+  <p>OBS Clients: <b>${clients.size}</b></p>
 
-<div id="test-section">
-  <button class="testbtn" onclick="sendTest('normal')">🎭 Single Gift</button>
-  <button class="streakbtn" onclick="sendTest('streak')">🔥 Streak x50</button>
-  <button class="centurybtn" onclick="sendTest('century')">💯 Century x100 (Epic)</button>
-  <button class="streakbtn" style="background:#ff2d55" onclick="sendTest('streak100')">🔥 Streak x100 (No Epic)</button>
-  <button class="whalebtn" onclick="sendTest('whale')">🐳 Whale 500</button>
+  <div class="links">
+    <p><a href="/overlay?obs=1">🖥 Overlay URL</a></p>
+    <p><a href="/gift-log">📣 Gift Log</a></p>
+    <p><a href="/gift-db">📦 Gift DB</a></p>
+    <p><a href="/unknown-gifts">🆕 New Gifts</a></p>
+  </div>
+
+  <button class="test-main-btn" onclick="toggleTest()">🛠️ Diagnostic Test Panel</button>
+
+  <div id="test-section">
+    <button class="testbtn" onclick="sendTest('normal')">🎭 Single Gift</button>
+    <button class="streakbtn" onclick="sendTest('streak')">🔥 Streak x50</button>
+    <button class="centurybtn" onclick="sendTest('century')">💯 Century x100 (Epic)</button>
+    <button class="streakbtn" style="background:#ff2d55" onclick="sendTest('streak100')">🔥 Streak x100 (No Epic)</button>
+    <button class="whalebtn" onclick="sendTest('whale')">🐳 Whale 500</button>
+  </div>
+
+  <div id="result"></div>
+  <button class="logout-btn" onclick="logout()">Sign Out</button>
 </div>
 
-<div id="result"></div>
-</div>
 <script>
-function toggleTest(){
-  const s = document.getElementById('test-section');
-  s.style.display = s.style.display === 'block' ? 'none' : 'block';
-}
-async function sendTest(type){
-  const r = document.getElementById('result');
-  r.textContent = 'Triggering...';
+  // ── FIREBASE CONFIG (ADD YOURS HERE) ──
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  
   try {
-    let url = '/test';
-    if(type === 'streak') url = '/test-streak';
-    if(type === 'streak100') url = '/test-streak?count=100';
-    if(type === 'century') url = '/test-century';
-    if(type === 'whale') url = '/test-whale';
-    const res = await fetch(url);
-    r.textContent = 'Sent successfully!';
-  } catch(e){ r.textContent = 'Error: ' + e.message; }
-}
+    firebase.initializeApp(firebaseConfig);
+  } catch(e) { console.error("Firebase init failed: Check your config."); }
+
+  const auth = firebase.auth();
+
+  // Auth State Listener
+  auth.onAuthStateChanged(user => {
+    document.getElementById('loading-ui').style.display = 'none';
+    if (user) {
+      document.getElementById('login-ui').style.display = 'none';
+      document.getElementById('control-ui').style.display = 'block';
+    } else {
+      document.getElementById('login-ui').style.display = 'block';
+      document.getElementById('control-ui').style.display = 'none';
+    }
+  });
+
+  function login() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(e => alert(e.message));
+  }
+
+  function logout() {
+    auth.signOut();
+  }
+
+  function toggleTest(){
+    const s = document.getElementById('test-section');
+    s.style.display = s.style.display === 'block' ? 'none' : 'block';
+  }
+  
+  async function sendTest(type){
+    const r = document.getElementById('result');
+    r.textContent = 'Triggering...';
+    try {
+      let url = '/test';
+      if(type === 'streak') url = '/test-streak';
+      if(type === 'streak100') url = '/test-streak?count=100';
+      if(type === 'century') url = '/test-century';
+      if(type === 'whale') url = '/test-whale';
+      const res = await fetch(url);
+      r.textContent = 'Sent successfully!';
+    } catch(e){ r.textContent = 'Error: ' + e.message; }
+  }
 </script>
 </body></html>`);
 });
