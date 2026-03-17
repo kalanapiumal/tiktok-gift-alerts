@@ -109,55 +109,65 @@ app.get('/', (req, res) => {
 <html><head><title>TikTok Gift Proxy</title><meta charset="UTF-8"/>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#0a0a0f;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh}
-  .box{text-align:center;padding:48px 56px;border:1px solid rgba(255,255,255,0.08);border-radius:20px;background:rgba(255,255,255,0.03)}
-  h1{font-size:26px;margin-bottom:20px}
+  body{background:#0a0a0f;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .box{text-align:center;padding:48px 56px;border:1px solid rgba(255,255,255,0.08);border-radius:24px;background:rgba(255,255,255,0.03);width:100%;max-width:480px;backdrop-filter:blur(10px)}
+  h1{font-size:26px;margin-bottom:12px;color:#ff2d55;letter-spacing:1px}
   p{color:rgba(255,255,255,0.5);margin:8px 0;font-size:14px}
   b{color:#fff}
   .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:8px;vertical-align:middle}
   a{color:#69c9d0;text-decoration:none}
-  .links{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06)}
-  button{margin-top:10px;padding:12px 28px;border:none;border-radius:10px;color:#fff;font-size:15px;font-family:monospace;cursor:pointer;letter-spacing:1px;display:block;width:100%}
+  .links{margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left}
+  .links p{margin:0}
+  button{margin-top:10px;padding:12px 28px;border:none;border-radius:12px;color:#fff;font-size:14px;font-family:monospace;cursor:pointer;letter-spacing:0.5px;display:block;width:100%;transition:transform 0.2s, opacity 0.2s}
+  button:active{transform:scale(0.98)}
+  .test-main-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2)}
   .testbtn{background:linear-gradient(135deg,#ff2d55,#ff6b00)}
-  .streakbtn{background:linear-gradient(135deg,#5c35cc,#ff6b00)}
+  .streakbtn{background:linear-gradient(135deg,#5c35cc,#69c9d0)}
+  .centurybtn{background:linear-gradient(135deg,#ffd700,#ff6b00);color:#000;font-weight:bold}
+  .whalebtn{background:linear-gradient(135deg,#8b5cf6,#ffd700)}
   button:hover{opacity:0.85}
   #result{margin-top:10px;font-size:12px;color:#00d26a;min-height:18px}
+  #test-section{display:none;margin-top:15px;padding-top:15px;border-top:1px dashed rgba(255,255,255,0.1)}
 </style>
 </head><body><div class="box">
-<h1>🎁 TikTok Gift Alert Proxy</h1>
+<h1>🎁 Gift Alert Control</h1>
 <p>Username: <b>@${TIKTOK_USERNAME}</b></p>
 <p><span class="dot"></span>TikTok: <b>${tiktokStatus}</b></p>
-<p>OBS clients connected: <b>${clients.size}</b></p>
+<p>OBS Clients: <b>${clients.size}</b></p>
+
 <div class="links">
-  <p><a href="/overlay">🖥 Overlay page (OBS source)</a></p>
-  <p><a href="/gift-log">📣 Gift Log (streamer monitor)</a></p>
-  <p><a href="/status">/status JSON</a></p>
-  <p><a href="/gift-db">📦 Live Gift DB (${giftDbFetched ? (liveGiftDb.size / 2 | 0) + ' gifts' : 'not loaded yet'})</a></p>
-  <p><a href="/unknown-gifts">🆕 Unknown / New Gifts log</a></p>
+  <p><a href="/overlay">🖥 Overlay URL</a></p>
+  <p><a href="/gift-log">📣 Gift Log</a></p>
+  <p><a href="/gift-db">📦 Gift DB</a></p>
+  <p><a href="/unknown-gifts">🆕 New Gifts</a></p>
 </div>
-<button class="testbtn" onclick="sendTest()">🎭 Send Single Gift</button>
-<button class="streakbtn" onclick="sendStreak()">🔥 Simulate Streak x50</button>
+
+<button class="test-main-btn" onclick="toggleTest()">🛠️ Diagnostic Test Panel</button>
+
+<div id="test-section">
+  <button class="testbtn" onclick="sendTest('normal')">🎭 Single Gift</button>
+  <button class="streakbtn" onclick="sendTest('streak')">🔥 Streak x50</button>
+  <button class="centurybtn" onclick="sendTest('century')">💯 Century x100</button>
+  <button class="whalebtn" onclick="sendTest('whale')">🐳 Whale 500</button>
+</div>
+
 <div id="result"></div>
 </div>
 <script>
-async function sendTest(){
-  const r = document.getElementById('result');
-  r.textContent = 'Sending...';
-  try {
-    const res = await fetch('/test');
-    const d = await res.json();
-    r.textContent = d.obsClients > 0
-      ? 'Sent! — ' + d.sent.nickname + ' sent ' + d.sent.giftName
-      : 'No OBS clients connected yet!';
-  } catch(e){ r.textContent = 'Error: ' + e.message; }
+function toggleTest(){
+  const s = document.getElementById('test-section');
+  s.style.display = s.style.display === 'block' ? 'none' : 'block';
 }
-async function sendStreak(){
+async function sendTest(type){
   const r = document.getElementById('result');
-  r.textContent = 'Streaming streak...';
+  r.textContent = 'Triggering...';
   try {
-    const res = await fetch('/test-streak');
-    const d = await res.json();
-    r.textContent = 'Streaking x' + d.finalCount + ' over ' + (d.finalCount * 80) + 'ms!';
+    let url = '/test';
+    if(type === 'streak') url = '/test-streak';
+    if(type === 'century') url = '/test-century';
+    if(type === 'whale') url = '/test-whale';
+    const res = await fetch(url);
+    r.textContent = 'Sent successfully!';
   } catch(e){ r.textContent = 'Error: ' + e.message; }
 }
 </script>
@@ -354,6 +364,45 @@ app.get('/test-streak', (req, res) => {
   }, 80);
 
   res.json({ ok: true, finalCount, obsClients: clients.size });
+});
+
+// ── Century test (x100 streak)
+app.get('/test-century', (req, res) => {
+  const streakKey = `test_century_${Date.now()}`;
+  const nickname = 'CenturyKing';
+  const giftName = 'Rose';
+  const pictureUrl = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png';
+  const finalCount = 100;
+
+  broadcast('gift', {
+    streakKey, uniqueId: nickname, nickname, giftName,
+    count: 1, coins: 1, pictureUrl, isStreak: true,
+  });
+
+  let step = 2;
+  const iv = setInterval(() => {
+    if (step > finalCount) {
+      clearInterval(iv);
+      broadcast('gift_end', { streakKey, count: finalCount, coins: finalCount });
+      return;
+    }
+    broadcast('gift_update', { streakKey, nickname, giftName, count: step, coins: step, pictureUrl });
+    step++;
+  }, 25); // Faster for century test
+  res.json({ ok: true });
+});
+
+// ── Whale test (500 coins)
+app.get('/test-whale', (req, res) => {
+  const nickname = 'WhaleHunter';
+  broadcast('gift', {
+    streakKey: '', uniqueId: nickname, nickname,
+    giftName: 'Lion', giftId: 'single_test',
+    count: 1, coins: 500,
+    pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/77f6ab69b0b03bda98a0a3d2bfdeb46f.png~tplv-obj.png',
+    isStreak: false,
+  });
+  res.json({ ok: true });
 });
 
 // ── Overlay HTML

@@ -732,71 +732,9 @@
       opacity: 1;
     }
 
-    /* ─── CONFIG PANEL ─── */
+    /* ─── CONFIG PANEL (Hidden for OBS) ─── */
     #config-panel {
-      position: fixed;
-      top: 16px;
-      left: 16px;
-      background: rgba(10, 10, 20, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 14px;
-      padding: 18px 22px;
-      color: #fff;
-      font-size: 13px;
-      width: 290px;
-      z-index: 1000;
-      backdrop-filter: blur(16px);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-    }
-
-    #config-panel h3 {
-      font-family: 'Bebas Neue', cursive;
-      font-size: 20px;
-      letter-spacing: 2px;
-      margin-bottom: 14px;
-      color: #ff2d55;
-    }
-
-    #config-panel label {
-      display: block;
-      margin-bottom: 4px;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 11px;
-      letter-spacing: .5px;
-      text-transform: uppercase;
-    }
-
-    #config-panel input {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
-      color: #fff;
-      padding: 8px 12px;
-      font-size: 13px;
-      margin-bottom: 12px;
-      outline: none;
-      font-family: 'DM Sans', sans-serif;
-    }
-
-    #config-panel input:focus {
-      border-color: #ff2d55;
-      background: rgba(255, 45, 85, 0.08);
-    }
-
-    #config-panel button {
-      width: 100%;
-      padding: 10px;
-      background: linear-gradient(135deg, #ff2d55, #ff6b00);
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-family: 'Bebas Neue', cursive;
-      font-size: 17px;
-      letter-spacing: 1.5px;
-      cursor: pointer;
-      transition: transform .15s, box-shadow .15s;
-      margin-bottom: 8px;
+      display: none;
     }
 
     #config-panel button:hover {
@@ -1048,38 +986,14 @@
   <div id="alert-container"></div>
   <div id="fire-overlay" style="position:fixed;inset:0;pointer-events:none;z-index:1001;overflow:visible;"></div>
 
-  <div id="config-panel">
-    <h3>🎁 @hackystreaming</h3>
-
-    <label>Proxy URL</label>
-    <input id="input-proxy" type="text" placeholder="https://your-proxy.railway.app" />
-
-    <label>Alert Duration (seconds)</label>
-    <input id="input-duration" type="number" value="7" min="2" max="15" />
-
-    <button onclick="testSingle()">🎭 Test Single Gift</button>
-    <button class="streak-btn" onclick="testStreakLocal()">🔥 Test Streak x50</button>
-    <button class="streak-btn" onclick="testCentury()" style="background:linear-gradient(135deg,#ffd700,#ff6b00);color:#1a0a00;">💯 Test Century x100</button>
-    <button class="streak-btn" onclick="testBigGift()" style="background:linear-gradient(135deg,#8b5cf6,#ffd700);">🐳 Test 500 Coin Gift</button>
-    <button class="connect-btn" onclick="connectProxy()">▶ Connect to Railway</button>
-
-    <div style="margin-top:10px">
-      <span id="status-dot"></span>
-      <span id="status-text">Not connected</span>
-    </div>
-  </div>
-
   <script>
     /* ═══════════════════════════════════════
        CONFIG
     ═══════════════════════════════════════ */
-    const params = new URLSearchParams(location.search);
     const OBS_MODE = params.has('obs');
     if (OBS_MODE) document.body.classList.add('obs-mode');
     const urlProxy = params.get('proxy') || '';
-    document.getElementById('input-proxy').value = urlProxy;
-    const urlDur = params.get('dur');
-    if (urlDur) document.getElementById('input-duration').value = urlDur;
+    const urlDur = parseFloat(params.get('dur')) || 7;
 
     /* ═══════════════════════════════════════
        DASHBOARD-OVERRIDABLE CONFIG
@@ -1397,13 +1311,9 @@
     function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
     function fmtCoins(n) { return n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : n; }
     function setStatus(state, msg) {
-      const dot = document.getElementById('status-dot');
-      dot.className = '';
-      if (state === 'connected') dot.classList.add('connected');
-      if (state === 'error') dot.classList.add('error');
-      document.getElementById('status-text').textContent = msg;
+      console.log(`[Status] ${state}: ${msg}`);
     }
-    function dur() { return parseFloat(document.getElementById('input-duration').value) || 7; }
+    function dur() { return urlDur; }
 
     /* ═══════════════════════════════════════
        FIRE EFFECT
@@ -1746,9 +1656,8 @@
 
     function connectProxy() {
       // Default to same origin (works when OBS loads this page directly from the Express server)
-      const inputVal = document.getElementById('input-proxy').value.trim().replace(/\/$/, '');
-      const base = inputVal || window.location.origin;
-      if (!base) { setStatus('error', 'Enter your proxy URL first'); return; }
+      const base = urlProxy.replace(/\/$/, '') || window.location.origin;
+      if (!base) { setStatus('error', 'No proxy URL'); return; }
       if (evtSource) { evtSource.close(); evtSource = null; }
       setStatus('connecting', 'Connecting…');
       console.log('[SSE] Connecting to:', base + '/events');
