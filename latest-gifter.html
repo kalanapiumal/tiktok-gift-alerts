@@ -35,22 +35,14 @@
       transform: translateY(0);
     }
 
-    #gifter-label {
-      font-family: 'Quantico', sans-serif;
-      font-size: 19px;
-      font-weight: 400;
-      color: rgba(255, 255, 255, 0.65);
-      letter-spacing: 0.5px;
-    }
-
     #gifter-name {
       font-family: 'Quantico', sans-serif;
       font-size: 19px;
       font-weight: 700;
       color: #ffffff;
       letter-spacing: 0.5px;
-      margin-left: 6px;
       transition: opacity 0.2s ease;
+      text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5); /* optional readability boost */
     }
 
     /* Subtle shimmer on name update */
@@ -65,7 +57,6 @@
 </head>
 <body>
   <div id="latest-gifter-wrap">
-    <span id="gifter-label">Latest Gifter:</span>
     <span id="gifter-name"></span>
   </div>
 
