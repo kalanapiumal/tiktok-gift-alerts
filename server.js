@@ -139,6 +139,7 @@ function renderDashboard() {
     <button class="centurybtn" onclick="sendTest('century')">💯 Century x100 (Epic)</button>
     <button class="streakbtn" style="background:#ff2d55" onclick="sendTest('streak100')">🔥 Streak x100 (No Epic)</button>
     <button class="whalebtn" onclick="sendTest('whale')">🐳 Whale 500</button>
+    <button class="heartmebtn" onclick="sendTest('heartme')">💖 Heart Me (Welcome)</button>
   </div>
 
   <div id="result"></div>
@@ -187,6 +188,7 @@ app.get('/', (req, res) => {
   .streakbtn{background:linear-gradient(135deg,#5c35cc,#69c9d0)}
   .centurybtn{background:linear-gradient(135deg,#ffd700,#ff6b00);color:#000;font-weight:bold}
   .whalebtn{background:linear-gradient(135deg,#8b5cf6,#ffd700)}
+  .heartmebtn{background:linear-gradient(135deg,#ff2d55,#ff6baf);font-weight:bold}
   .logout-btn{margin-top:20px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-size:11px;padding:8px}
   #result{margin-top:10px;font-size:12px;color:#00d26a}
   #test-section{display:none;margin-top:15px;padding-top:15px;border-top:1px dashed rgba(255,255,255,0.1)}
@@ -284,6 +286,7 @@ app.get('/', (req, res) => {
       if(type === 'streak100') url = '/test-streak?count=100';
       if(type === 'century') url = '/test-century';
       if(type === 'whale') url = '/test-whale';
+      if(type === 'heartme') url = '/test-heartme';
       // Append pin for server check
       const separator = url.includes('?') ? '&' : '?';
       const res = await fetch(url + separator + 'pin=' + currentPin);
@@ -550,6 +553,20 @@ app.get('/test-whale', (req, res) => {
     isStreak: false,
   });
   res.json({ ok: true });
+});
+
+// ── Heart Me test — triggers the special "Welcome to Hacky's Team" alert
+app.get('/test-heartme', checkSecurity, (req, res) => {
+  const nickname = 'LovelyViewer';
+  broadcast('gift', {
+    streakKey: '', uniqueId: nickname, nickname,
+    giftName: 'Heart Me', giftId: '',
+    count: 1, coins: 10,
+    pictureUrl: '',
+    isStreak: false,
+  });
+  console.log(`[Test] Heart Me gift sent for ${nickname}`);
+  res.json({ ok: true, obsClients: clients.size });
 });
 
 // ── Overlay HTML

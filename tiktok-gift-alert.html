@@ -977,6 +977,148 @@
       from { box-shadow: 0 0 14px rgba(255,215,0,0.7); }
       to   { box-shadow: 0 0 32px rgba(255,180,0,1.0), 0 0 60px rgba(255,120,0,0.5); }
     }
+
+    /* ════════════════════════════════════
+   HEART ME — WELCOME TEAM ALERT
+════════════════════════════════════ */
+    .heartme-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .heartme-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 32px 48px 28px;
+      border-radius: 32px;
+      background: linear-gradient(135deg, rgba(20, 6, 14, 0.97), rgba(10, 2, 8, 0.99));
+      box-shadow:
+        0 0 0 2px rgba(255, 107, 175, 0.6),
+        0 0 60px rgba(255, 45, 85, 0.55),
+        0 0 120px rgba(255, 107, 175, 0.28),
+        0 24px 80px rgba(0, 0, 0, 0.8),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(28px);
+      overflow: visible;
+      opacity: 0;
+      animation: heartmeCardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+                 heartmeCardOut 0.5s ease-in forwards var(--hm-hold, 3.5s);
+      min-width: 420px;
+      text-align: center;
+    }
+    /* spinning gradient border */
+    .heartme-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 32px;
+      padding: 2px;
+      background: linear-gradient(135deg, #ff2d55, #ff6baf, #ff2d55, #ff6baf);
+      background-size: 300% 300%;
+      animation: heartmeBorderSpin 2s linear infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: destination-out;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes heartmeBorderSpin {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes heartmeCardIn {
+      0%   { opacity: 0; transform: scale(0.6) translateY(30px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes heartmeCardOut {
+      0%   { opacity: 1; transform: scale(1); }
+      80%  { opacity: 0; transform: scale(1.08); }
+      100% { opacity: 0; transform: scale(1.12); }
+    }
+
+    .heartme-hearts-row {
+      display: flex;
+      gap: 8px;
+      font-size: 32px;
+      z-index: 1;
+      animation: heartmeHeartsFloat 1.2s ease-in-out infinite alternate;
+    }
+    @keyframes heartmeHeartsFloat {
+      from { transform: translateY(0px); filter: drop-shadow(0 0 10px #ff2d55); }
+      to   { transform: translateY(-6px); filter: drop-shadow(0 0 22px #ff6baf); }
+    }
+    .heartme-user {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 34px;
+      letter-spacing: 2.5px;
+      color: #fff;
+      text-shadow: 0 0 24px rgba(255, 45, 85, 0.9), 0 0 50px rgba(255, 107, 175, 0.5);
+      z-index: 1;
+      white-space: nowrap;
+    }
+    .heartme-welcome {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 22px;
+      letter-spacing: 3px;
+      background: linear-gradient(90deg, #ff2d55, #ff6baf, #ff2d55);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: heartmeTextShine 2.2s linear infinite;
+      filter: drop-shadow(0 0 8px rgba(255, 107, 175, 0.9));
+      z-index: 1;
+      white-space: nowrap;
+    }
+    @keyframes heartmeTextShine {
+      from { background-position: 0% center; }
+      to   { background-position: 200% center; }
+    }
+    .heartme-sub {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: rgba(255, 107, 175, 0.75);
+      letter-spacing: 1.5px;
+      z-index: 1;
+    }
+    /* Floating hearts around the card */
+    .heartme-float {
+      position: fixed;
+      font-size: var(--hf-size, 18px);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 2999;
+      animation: heartmeFloat var(--hf-dur, 2.5s) ease-out var(--hf-delay, 0s) forwards;
+    }
+    @keyframes heartmeFloat {
+      0%   { opacity: 0; transform: translate(0, 0) scale(0.3) rotate(var(--hf-rot, 0deg)); }
+      15%  { opacity: 1; transform: translate(var(--hf-tx1, 0px), var(--hf-ty1, -20px)) scale(1.2) rotate(calc(var(--hf-rot, 0deg) * -0.5)); }
+      100% { opacity: 0; transform: translate(var(--hf-tx2, 0px), var(--hf-ty2, -120px)) scale(0.5) rotate(calc(var(--hf-rot, 0deg) * 1.5)); }
+    }
+    /* Shimmering sparkle ring around card */
+    .heartme-ring {
+      position: absolute;
+      inset: -6px;
+      border-radius: 38px;
+      border: 3px solid rgba(255, 107, 175, 0.7);
+      pointer-events: none;
+      z-index: 0;
+      animation: heartmeRingPulse 1.4s ease-in-out infinite alternate;
+    }
+    @keyframes heartmeRingPulse {
+      from { box-shadow: 0 0 20px rgba(255, 45, 85, 0.5), inset 0 0 20px rgba(255, 45, 85, 0.08); border-color: rgba(255, 45, 85, 0.6); }
+      to   { box-shadow: 0 0 50px rgba(255, 107, 175, 0.85), inset 0 0 30px rgba(255, 107, 175, 0.12); border-color: rgba(255, 107, 175, 0.9); }
+    }
   </style>
 </head>
 
@@ -1456,6 +1598,96 @@
     ═══════════════════════════════════════ */
     const BIG_GIFT_THRESHOLD = 500;
 
+    /* ─── HEART ME: Special Welcome Alert ─── */
+    function showHeartMeAlert(username) {
+      // Play a warm sparkle sound
+      if (SOUND_ENABLED) SOUNDS.sparkle?.(SOUND_VOL);
+
+      const HOLD_MS = 4000;
+
+      // Overlay container
+      const overlay = document.createElement('div');
+      overlay.className = 'heartme-overlay';
+
+      // Card
+      const card = document.createElement('div');
+      card.className = 'heartme-card';
+      card.style.setProperty('--hm-hold', HOLD_MS + 'ms');
+
+      card.innerHTML = `
+        <div class="heartme-ring"></div>
+        <div class="heartme-hearts-row">💖 🩷 💗 🩷 💖</div>
+        <div class="heartme-user">${esc(username)}</div>
+        <div class="heartme-welcome">💖 WELCOME TO HACKY'S TEAM 💖</div>
+        <div class="heartme-sub">sent a HEART ME &nbsp;•&nbsp; Thank you!</div>
+      `;
+
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      // Launch floating hearts from card center after layout
+      requestAnimationFrame(() => {
+        const rect = card.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const heartEmojis = ['💖','🩷','💗','💝','❤️'];
+        for (let i = 0; i < 14; i++) {
+          const hf = document.createElement('div');
+          hf.className = 'heartme-float';
+          hf.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+          const angle = (Math.PI * 2 * i / 14) + (Math.random() - 0.5) * 0.8;
+          const dist1 = 30 + Math.random() * 30;
+          const dist2 = 100 + Math.random() * 140;
+          const tx1 = Math.cos(angle) * dist1;
+          const ty1 = Math.sin(angle) * dist1 - 20;
+          const tx2 = Math.cos(angle) * dist2;
+          const ty2 = Math.sin(angle) * dist2 - 60;
+          const size = 14 + Math.random() * 18;
+          const dur = 1.8 + Math.random() * 1.2;
+          const delay = Math.random() * 0.6;
+          const rot = (Math.random() - 0.5) * 60;
+          hf.style.cssText = [
+            `left:${cx}px`, `top:${cy}px`,
+            `--hf-size:${size}px`,
+            `--hf-dur:${dur}s`,
+            `--hf-delay:${delay}s`,
+            `--hf-tx1:${tx1}px`, `--hf-ty1:${ty1}px`,
+            `--hf-tx2:${tx2}px`, `--hf-ty2:${ty2}px`,
+            `--hf-rot:${rot}deg`
+          ].join(';');
+          document.body.appendChild(hf);
+          setTimeout(() => hf.remove(), (dur + delay) * 1000 + 100);
+        }
+
+        // Shockwave ring from center
+        for (let i = 0; i < 3; i++) {
+          const sw = document.createElement('div');
+          sw.className = 'shockwave';
+          const size2 = card.offsetWidth;
+          sw.style.cssText = [
+            `left:${rect.left - 4}px`, `top:${rect.top - 4}px`,
+            `width:${size2 + 8}px`, `height:${rect.height + 8}px`,
+            `position:fixed`, `border-radius:38px`,
+            `--sw-color:#ff6baf`,
+            `--sw-dur:${0.65 + i * 0.2}s`,
+            `animation-delay:${i * 0.18}s`
+          ].join(';');
+          document.body.appendChild(sw);
+          setTimeout(() => sw.remove(), 1500);
+        }
+
+        // Full-screen pink flash
+        const flash = document.getElementById('flash');
+        flash.style.background = 'radial-gradient(ellipse at center, rgba(255,107,175,0.32), rgba(255,45,85,0.18) 50%, transparent 75%)';
+        flash.style.transition = 'opacity 0.06s ease';
+        flash.classList.add('active');
+        setTimeout(() => { flash.classList.remove('active'); flash.style.background = ''; }, 330);
+      });
+
+      // Auto remove after animation
+      setTimeout(() => overlay.remove(), HOLD_MS + 600);
+    }
+
     function showAlert({ username, giftName, giftId = '', count = 1, coins, pictureUrl = '', streakKey = '', isCentury = false }) {
       const d = dur();
       const holdMs = (d - 0.45) * 1000;
@@ -1464,6 +1696,13 @@
       const isBigGift = total >= BIG_GIFT_THRESHOLD; // triggers for all high value gifts
       // Use DB image as additional fallback
       const finalPic = pictureUrl || info.liveImg || '';
+
+      // ─── Heart Me special welcome alert ───
+      if ((giftName || '').toLowerCase().includes('heart me')) {
+        showHeartMeAlert(username);
+        // Still show the normal alert card below, just return here to skip
+        // Actually we show both — the special overlay + normal card
+      }
 
       // Flash
       const flash = document.getElementById('flash');
