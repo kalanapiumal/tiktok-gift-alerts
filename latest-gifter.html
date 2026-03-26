@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Latest Gifter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    #latest-gifter-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      white-space: nowrap;
+      padding: 0;
+    }
+
+    #latest-gifter-wrap.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #gifter-label {
+      font-family: 'Quantico', sans-serif;
+      font-size: 19px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.65);
+      letter-spacing: 0.5px;
+    }
+
+    #gifter-name {
+      font-family: 'Quantico', sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+      margin-left: 6px;
+      transition: opacity 0.2s ease;
+    }
+
+    /* Subtle shimmer on name update */
+    @keyframes nameFlash {
+      0%   { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+    #gifter-name.flash {
+      animation: nameFlash 0.35s ease forwards;
+    }
+  </style>
+</head>
+<body>
+  <div id="latest-gifter-wrap">
+    <span id="gifter-label">Latest Gifter:</span>
+    <span id="gifter-name"></span>
+  </div>
+
+  <script>
+    const wrap = document.getElementById('latest-gifter-wrap');
+    const nameEl = document.getElementById('gifter-name');
+
+    function updateGifter(username) {
+      nameEl.textContent = username;
+      wrap.classList.add('visible');
+      // Brief flash to signal update
+      nameEl.classList.remove('flash');
+      void nameEl.offsetWidth; // reflow
+      nameEl.classList.add('flash');
+    }
+
+    // Connect to SSE
+    const base = window.location.origin;
+    const evtSource = new EventSource(`${base}/events`);
+
+    evtSource.addEventListener('latest_gifter', e => {
+      try {
+        const d = JSON.parse(e.data);
+        if (d.username) updateGifter(d.username);
+      } catch (err) { console.warn('[LatestGifter] parse error', err); }
+    });
+
+    evtSource.onerror = () => {
+      console.warn('[LatestGifter] SSE connection lost, retrying...');
+    };
+  </script>
+</body>
+</html>

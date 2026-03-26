@@ -129,6 +129,7 @@ function renderDashboard() {
     <p><a href="/gift-log" target="_blank">📣 Gift Log</a></p>
     <p><a href="/gift-db" target="_blank">📦 Gift DB</a></p>
     <p><a href="/unknown-gifts" target="_blank">🆕 New Gifts</a></p>
+    <p><a href="/latest-gifter" target="_blank">🏆 Latest Gifter</a></p>
   </div>
 
   <button class="test-main-btn" onclick="toggleTest()">🛠️ Diagnostic Test Panel</button>
@@ -584,6 +585,11 @@ app.get('/gift-log', (req, res) => {
   res.sendFile(path.join(__dirname, 'gift-log.html'));
 });
 
+// ── Latest Gifter OBS source (98+ coins)
+app.get('/latest-gifter', (req, res) => {
+  res.sendFile(path.join(__dirname, 'latest-gifter.html'));
+});
+
 // ── Static files (after all routes)
 app.use(express.static(__dirname, { index: false }));
 
@@ -727,12 +733,15 @@ function connectTikTok() {
           const cur = activeStreaks.get(streakKey);
           if (cur) {
             broadcast('gift_end', { streakKey, count: cur.count, coins: diamondCount * cur.count });
+            if (diamondCount * cur.count >= 98) {
+              broadcast('latest_gifter', { username: cur.nickname || 'Someone' });
+            }
             activeStreaks.delete(streakKey);
             console.log(`[Gift] ⌛ Streak TIMEOUT "${giftName}" x${ cur.count } `);
           }
         }, 8000);
 
-        activeStreaks.set(streakKey, { count, timer });
+        activeStreaks.set(streakKey, { count, timer, nickname: data.nickname || data.uniqueId || 'Someone' });
 
       } else {
         // repeatEnd = true — streak finished
@@ -757,6 +766,10 @@ function connectTikTok() {
           count,
           coins: diamondCount * count,
         });
+        // Update latest gifter if 98+ total coins
+        if (diamondCount * count >= 98) {
+          broadcast('latest_gifter', { username: data.nickname || data.uniqueId || 'Someone' });
+        }
         console.log(`[Gift] ✅ Streak END  ${ data.nickname } x${ count } "${giftName}"`);
       }
 
@@ -785,6 +798,10 @@ function connectTikTok() {
         pictureUrl,
         isStreak: false,
       });
+      // Update latest gifter if 98+ coins
+      if (diamondCount >= 98) {
+        broadcast('latest_gifter', { username: data.nickname || data.uniqueId || 'Someone' });
+      }
       console.log(`[Gift] ✅ Single  ${ data.nickname } "${giftName}" — ${ diamondCount } coins`);
     }
   });
