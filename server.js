@@ -480,6 +480,9 @@ app.get('/test', checkSecurity, (req, res) => {
     streakKey: '', uniqueId: g.nickname, nickname: g.nickname,
     giftName: g.giftName, count: 1, coins: g.coins, pictureUrl: g.pictureUrl, isStreak: false,
   });
+  if (g.coins >= 98) {
+    broadcast('latest_gifter', { username: g.nickname });
+  }
   console.log(`[Test] Single gift: ${ g.giftName } `);
   res.json({ ok: true, sent: g, obsClients: clients.size });
 });
@@ -505,6 +508,9 @@ app.get('/test-streak', checkSecurity, (req, res) => {
     if (step > finalCount) {
       clearInterval(iv);
       broadcast('gift_end', { streakKey, count: finalCount, coins: coinsPer * finalCount });
+      if (coinsPer * finalCount >= 98) {
+        broadcast('latest_gifter', { username: nickname });
+      }
       return;
     }
     broadcast('gift_update', {
@@ -535,11 +541,12 @@ app.get('/test-century', (req, res) => {
     if (step > finalCount) {
       clearInterval(iv);
       broadcast('gift_end', { streakKey, count: finalCount, coins: finalCount });
+      broadcast('latest_gifter', { username: nickname }); // 100 coins always >= 98
       return;
     }
     broadcast('gift_update', { streakKey, nickname, giftName, count: step, coins: step, pictureUrl });
     step++;
-  }, 25); // Faster for century test
+  }, 25);
   res.json({ ok: true });
 });
 
@@ -553,6 +560,7 @@ app.get('/test-whale', (req, res) => {
     pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/77f6ab69b0b03bda98a0a3d2bfdeb46f.png~tplv-obj.png',
     isStreak: false,
   });
+  broadcast('latest_gifter', { username: nickname }); // 500 coins >= 98
   res.json({ ok: true });
 });
 
