@@ -12,6 +12,7 @@ let tiktokStatus = 'disconnected';
 let tiktok = null;
 let reconnectTimer = null;
 const clients = new Set();
+let latestGifterName = null; // Persist for fresh SSE connections
 
 // ── SECURITY ──
 const ADMIN_PIN = String(process.env.ADMIN_PIN || '1122').trim();
@@ -105,6 +106,11 @@ function broadcast(event, data) {
   for (const res of clients) {
     try { res.write(msg); } catch (_) { clients.delete(res); }
   }
+}
+
+function updateLatestGifter(username) {
+  latestGifterName = username;
+  broadcast('latest_gifter', { username });
 }
 
 // ── Helper to render dashboard
@@ -336,6 +342,11 @@ app.get('/events', (req, res) => {
   // Send current config to the newly connected client
   res.write(`event: config\ndata: ${JSON.stringify({ minAlertCoins: globalMinCoins })}\n\n`);
 
+  // Send current latest gifter if we have one
+  if (latestGifterName) {
+    res.write(`event: latest_gifter\ndata: ${JSON.stringify({ username: latestGifterName })}\n\n`);
+  }
+
   const heartbeat = setInterval(() => {
     try { res.write(': ping\n\n'); } catch (_) { clearInterval(heartbeat); }
   }, 20000);
@@ -481,7 +492,7 @@ app.get('/test', checkSecurity, (req, res) => {
     giftName: g.giftName, count: 1, coins: g.coins, pictureUrl: g.pictureUrl, isStreak: false,
   });
   if (g.coins >= 98) {
-    broadcast('latest_gifter', { username: g.nickname });
+    updateLatestGifter(g.nickname);
   }
   console.log(`[Test] Single gift: ${ g.giftName } `);
   res.json({ ok: true, sent: g, obsClients: clients.size });
@@ -509,7 +520,7 @@ app.get('/test-streak', checkSecurity, (req, res) => {
       clearInterval(iv);
       broadcast('gift_end', { streakKey, count: finalCount, coins: coinsPer * finalCount });
       if (coinsPer * finalCount >= 98) {
-        broadcast('latest_gifter', { username: nickname });
+        updateLatestGifter(nickname);
       }
       return;
     }
@@ -542,6 +553,7 @@ app.get('/test-century', (req, res) => {
       clearInterval(iv);
       broadcast('gift_end', { streakKey, count: finalCount, coins: finalCount });
       broadcast('latest_gifter', { username: nickname }); // 100 coins always >= 98
+      updateLatestGifter(nickname);
       return;
     }
     broadcast('gift_update', { streakKey, nickname, giftName, count: step, coins: step, pictureUrl });
@@ -560,7 +572,7 @@ app.get('/test-whale', (req, res) => {
     pictureUrl: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/77f6ab69b0b03bda98a0a3d2bfdeb46f.png~tplv-obj.png',
     isStreak: false,
   });
-  broadcast('latest_gifter', { username: nickname }); // 500 coins >= 98
+  updateLatestGifter(nickname); // 500 coins >= 98
   res.json({ ok: true });
 });
 
@@ -776,7 +788,7 @@ function connectTikTok() {
         });
         // Update latest gifter if 98+ total coins
         if (diamondCount * count >= 98) {
-          broadcast('latest_gifter', { username: data.nickname || data.uniqueId || 'Someone' });
+          updateLatestGifter(data.nickname || data.uniqueId || 'Someone');
         }
         console.log(`[Gift] ✅ Streak END  ${ data.nickname } x${ count } "${giftName}"`);
       }
@@ -808,7 +820,7 @@ function connectTikTok() {
       });
       // Update latest gifter if 98+ coins
       if (diamondCount >= 98) {
-        broadcast('latest_gifter', { username: data.nickname || data.uniqueId || 'Someone' });
+        updateLatestGifter(data.nickname || data.uniqueId || 'Someone');
       }
       console.log(`[Gift] ✅ Single  ${ data.nickname } "${giftName}" — ${ diamondCount } coins`);
     }
