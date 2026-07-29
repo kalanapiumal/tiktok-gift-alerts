@@ -304,21 +304,29 @@ app.get('/', (req, res) => {
 </body></html>`);
 });
 
-// ── Verify session middleware
-app.use(express.json());
+function getExpectedPin() {
+  const envPin = process.env.ADMIN_PIN;
+  if (!envPin) return '1122';
+  return String(envPin).replace(/['"]/g, '').trim();
+}
+
 app.post('/verify-access', (req, res) => {
-  const pin = String(req.body.pin || '').trim();
-  if (pin === ADMIN_PIN) {
+  const inputPin = String(req.body.pin || '').replace(/['"]/g, '').trim();
+  const expectedPin = getExpectedPin();
+  
+  if (inputPin === expectedPin) {
     res.send(renderDashboard());
   } else {
+    console.warn(`[Auth] Failed PIN attempt. Expected length: ${expectedPin.length}, Received length: ${inputPin.length}`);
     res.status(401).send('Invalid PIN');
   }
 });
 
 // Middleware for test routes
 function checkSecurity(req, res, next) {
-  const pin = String(req.query.pin || req.headers['x-pin'] || '').trim();
-  if (pin === ADMIN_PIN) next();
+  const inputPin = String(req.query.pin || req.headers['x-pin'] || '').replace(/['"]/g, '').trim();
+  const expectedPin = getExpectedPin();
+  if (inputPin === expectedPin) next();
   else res.status(403).send('Unauthorized');
 }
 
