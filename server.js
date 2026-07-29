@@ -668,13 +668,18 @@ function connectTikTok() {
   tiktok.on('gift', data => {
     const now = Date.now();
     const isStreakable = data.giftType === 1 || data.giftType === 2 || data.sendType === 1 || data.repeatEnd !== undefined;
-    const giftId = String(data.giftId || data.gift_id || 'unknown');
-    const streakKey = `${ data.uniqueId }:${ giftId } `;
-    // Enrich from live DB if available (covers ALL TikTok gifts, all regions)
+    const giftId = String(data.giftId || data.gift_id || data.gift?.id || 'unknown');
+    
+    // Extract gifter details from top-level or data.user object
+    const uniqueId = data.uniqueId || data.user?.uniqueId || 'Someone';
+    const nickname = data.nickname || data.user?.nickname || data.user?.displayId || uniqueId;
+    
+    const streakKey = `${ uniqueId }:${ giftId } `;
+    // Enrich from live DB if available
     const dbEntry = liveGiftDb.get(giftId);
-    const pictureUrl = data.giftPictureUrl || data.giftImageUrl || data.pictureUrl || dbEntry?.img || '';
-    const giftName = data.giftName || data.gift_name || dbEntry?.name || 'Gift';
-    const diamondCount = data.diamondCount || data.diamond_count || dbEntry?.coins || 1;
+    const pictureUrl = data.giftPictureUrl || data.giftImageUrl || data.pictureUrl || data.gift?.icon?.url_list?.[0] || data.gift?.image?.url_list?.[0] || dbEntry?.img || '';
+    const giftName = data.giftName || data.gift_name || data.gift?.name || data.gift?.describe || dbEntry?.name || 'Gift';
+    const diamondCount = data.diamondCount || data.diamond_count || data.gift?.diamond_count || dbEntry?.coins || 1;
     const count = data.repeatCount || data.repeat_count || 1;
 
     // ── Track unknown gifts (not in GIFT_DATA)
@@ -708,8 +713,8 @@ function connectTikTok() {
       if (!existing) {
         broadcast('gift', {
           streakKey,
-          uniqueId: data.uniqueId,
-          nickname: data.nickname || data.uniqueId || 'Someone',
+          uniqueId,
+          nickname,
           giftName,
           giftId,
           count: count, // Use actual count from TikTok (don't hardcode 1)
@@ -717,7 +722,7 @@ function connectTikTok() {
           pictureUrl,
           isStreak: true,
         });
-        console.log(`[Gift] 🔴 Streak START  ${ data.nickname } "${giftName}" x${ count } `);
+        console.log(`[Gift] 🔴 Streak START  ${ nickname } "${giftName}" x${ count } `);
       }
 
       // ── 2. Handle Mid-streak vs End-streak
@@ -728,7 +733,7 @@ function connectTikTok() {
           if (count > existing.count) {
             broadcast('gift_update', {
               streakKey,
-              nickname: data.nickname || data.uniqueId || 'Someone',
+              nickname,
               giftName,
               count,
               coins: diamondCount * count,
