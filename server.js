@@ -307,7 +307,7 @@ app.get('/', (req, res) => {
 // ── Verify session middleware
 app.use(express.json());
 app.post('/verify-access', (req, res) => {
-  const { pin } = req.body;
+  const pin = String(req.body.pin || '').trim();
   if (pin === ADMIN_PIN) {
     res.send(renderDashboard());
   } else {
@@ -317,7 +317,7 @@ app.post('/verify-access', (req, res) => {
 
 // Middleware for test routes
 function checkSecurity(req, res, next) {
-  const pin = req.query.pin || req.headers['x-pin'];
+  const pin = String(req.query.pin || req.headers['x-pin'] || '').trim();
   if (pin === ADMIN_PIN) next();
   else res.status(403).send('Unauthorized');
 }
