@@ -4,7 +4,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const TIKTOK_USERNAME = process.env.TIKTOK_USERNAME || 'hackystreaming';
+let activeTikTokUsername = (process.env.TIKTOK_USERNAME || 'hackystreaming').trim();
 
 app.use(cors({ origin: '*' }));
 
@@ -628,7 +628,10 @@ function connectTikTok() {
 
   if (tiktok) { try { tiktok.disconnect(); } catch (_) { } tiktok = null; }
 
-  console.log(`[TikTok] Connecting to @${ TIKTOK_USERNAME }...`);
+  activeTikTokUsername = (process.env.TIKTOK_USERNAME || activeTikTokUsername || 'hackystreaming').trim();
+  const currentUsername = activeTikTokUsername;
+
+  console.log(`[TikTok] Connecting to @${ currentUsername }...`);
   tiktokStatus = 'connecting';
 
   try {
@@ -647,7 +650,7 @@ function connectTikTok() {
       connectionOptions.sessionId = sessionId;
       console.log('[TikTok] Using session ID for authentication');
     }
-    tiktok = new WebcastPushConnection(TIKTOK_USERNAME, connectionOptions);
+    tiktok = new WebcastPushConnection(currentUsername, connectionOptions);
   } catch (err) {
     console.error('[TikTok] Init error:', err.message);
     tiktokStatus = 'error';
@@ -659,7 +662,7 @@ function connectTikTok() {
     .then(state => {
       tiktokStatus = 'connected';
       console.log(`[TikTok] Connected! roomId = ${ state.roomId } `);
-      broadcast('connected', { username: TIKTOK_USERNAME, roomId: state.roomId });
+      broadcast('connected', { username: currentUsername, roomId: state.roomId });
       // Fetch gift database shortly after connecting (give the API a moment)
       scheduleGiftDbFetch(3000);
     })
@@ -672,7 +675,7 @@ function connectTikTok() {
         tiktokStatus = 'error';
         console.error(`[TikTok] Connection error details: ${ errMsg }`);
       }
-      broadcast(tiktokStatus, { username: TIKTOK_USERNAME, error: errMsg });
+      broadcast(tiktokStatus, { username: currentUsername, error: errMsg });
       scheduleReconnect(30000);
     });
 
