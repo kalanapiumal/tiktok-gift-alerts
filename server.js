@@ -360,7 +360,7 @@ app.get('/events', (req, res) => {
 
 // ── Status JSON
 app.get('/status', (req, res) => {
-  res.json({ status: tiktokStatus, username: TIKTOK_USERNAME, clients: clients.size });
+  res.json({ status: tiktokStatus, username: activeTikTokUsername, clients: clients.size });
 });
 
 // ── Live Gift DB — HTML gallery or JSON
@@ -865,7 +865,7 @@ function scheduleReconnect(ms = 30000) {
 }
 
 app.listen(PORT, () => {
-  console.log(`[Server] Running on port ${ PORT } — @${ TIKTOK_USERNAME } `);
+  console.log(`[Server] Running on port ${ PORT } — @${ activeTikTokUsername } `);
   connectTikTok();
 
   // Self-ping to prevent Render Free tier from spinning down after 15 mins of inactivity
