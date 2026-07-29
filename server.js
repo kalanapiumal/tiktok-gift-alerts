@@ -631,12 +631,22 @@ function connectTikTok() {
   tiktokStatus = 'connecting';
 
   try {
-    tiktok = new WebcastPushConnection(TIKTOK_USERNAME, {
+    const sessionId = (process.env.TIKTOK_SESSION_ID || '').trim();
+    const connectionOptions = {
       processInitialData: false,
       enableExtendedGiftInfo: true,
       enableWebsocketUpgrade: true,
       requestPollingIntervalMs: 2000,
-    });
+      clientParams: {
+        app_language: 'en-US',
+        webcast_language: 'en-US',
+      }
+    };
+    if (sessionId) {
+      connectionOptions.sessionId = sessionId;
+      console.log('[TikTok] Using session ID for authentication');
+    }
+    tiktok = new WebcastPushConnection(TIKTOK_USERNAME, connectionOptions);
   } catch (err) {
     console.error('[TikTok] Init error:', err.message);
     tiktokStatus = 'error';
