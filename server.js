@@ -118,7 +118,7 @@ function renderDashboard() {
   const color = tiktokStatus === 'connected' ? '#00d26a' : tiktokStatus === 'connecting' ? '#ffd700' : '#ff2d55';
   return `
   <h1>🎁 Gift Alert Control</h1>
-  <p>Username: <b>@${TIKTOK_USERNAME}</b></p>
+  <p>Username: <b>@${activeTikTokUsername}</b></p>
   <p><span class="dot" style="background:${color}"></span>TikTok: <b>${tiktokStatus}</b></p>
   <p>OBS Clients: <b>${clients.size}</b></p>
   
