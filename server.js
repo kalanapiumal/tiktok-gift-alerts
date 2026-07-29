@@ -618,7 +618,7 @@ function connectTikTok() {
   let WebcastPushConnection;
   try {
     const tlc = require('tiktok-live-connector');
-    WebcastPushConnection = tlc.TikTokLiveConnection || tlc.WebcastPushConnection || tlc.default || tlc;
+    WebcastPushConnection = typeof tlc === 'function' ? tlc : (tlc.WebcastPushConnection || tlc.TikTokLiveConnection || tlc.default);
   } catch (err) {
     tiktokStatus = 'error';
     console.error('[TikTok] Package missing:', err.message);
