@@ -638,9 +638,9 @@ function connectTikTok() {
     const sessionId = (process.env.TIKTOK_SESSION_ID || '').trim();
     const connectionOptions = {
       processInitialData: false,
-      enableExtendedGiftInfo: true,
+      enableExtendedGiftInfo: false,
       enableWebsocketUpgrade: true,
-      requestPollingIntervalMs: 2000,
+      requestPollingIntervalMs: 2500,
       clientParams: {
         app_language: 'en-US',
         webcast_language: 'en-US',
