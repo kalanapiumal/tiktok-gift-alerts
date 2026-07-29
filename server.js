@@ -863,4 +863,20 @@ function scheduleReconnect(ms = 30000) {
 app.listen(PORT, () => {
   console.log(`[Server] Running on port ${ PORT } — @${ TIKTOK_USERNAME } `);
   connectTikTok();
+
+  // Self-ping to prevent Render Free tier from spinning down after 15 mins of inactivity
+  const RENDER_EXTERNAL_URL = process.env.RENDER_EXTERNAL_URL;
+  if (RENDER_EXTERNAL_URL) {
+    console.log(`[KeepAlive] Enabling auto self-ping for ${RENDER_EXTERNAL_URL}`);
+    setInterval(async () => {
+      try {
+        const fetch = (await import('node-fetch')).default || globalThis.fetch;
+        await fetch(`${RENDER_EXTERNAL_URL}/status`);
+        console.log('[KeepAlive] Ping sent to keep server awake');
+      } catch (err) {
+        console.warn('[KeepAlive] Ping failed:', err.message);
+      }
+    }, 10 * 60 * 1000); // Ping every 10 minutes
+  }
 });
+
