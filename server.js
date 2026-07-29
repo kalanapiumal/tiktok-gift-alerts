@@ -663,9 +663,15 @@ function connectTikTok() {
       scheduleGiftDbFetch(3000);
     })
     .catch(err => {
-      tiktokStatus = 'offline';
-      console.warn(`[TikTok] Not live: ${ err.message } `);
-      broadcast('offline', { username: TIKTOK_USERNAME });
+      const errMsg = err?.message || String(err);
+      if (errMsg.includes('User might be offline') || errMsg.includes('LIVE has ended') || errMsg.includes('User is offline')) {
+        tiktokStatus = 'offline';
+        console.warn(`[TikTok] Stream offline: ${ errMsg }`);
+      } else {
+        tiktokStatus = 'error';
+        console.error(`[TikTok] Connection error details: ${ errMsg }`);
+      }
+      broadcast(tiktokStatus, { username: TIKTOK_USERNAME, error: errMsg });
       scheduleReconnect(30000);
     });
 
