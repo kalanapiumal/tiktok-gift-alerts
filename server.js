@@ -677,7 +677,7 @@ function connectTikTok() {
 
   tiktok.on('gift', data => {
     const now = Date.now();
-    const isStreakable = data.giftType === 1;   // giftType 1 = streakable (Rose, Heart, etc.)
+    const isStreakable = data.giftType === 1 || data.giftType === 2 || data.sendType === 1 || data.repeatEnd !== undefined;
     const giftId = String(data.giftId || data.gift_id || 'unknown');
     const streakKey = `${ data.uniqueId }:${ giftId } `;
     // Enrich from live DB if available (covers ALL TikTok gifts, all regions)
