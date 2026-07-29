@@ -296,7 +296,7 @@ app.get('/', (req, res) => {
       if(type === 'heartme') url = '/test-heartme';
       // Append pin for server check
       const separator = url.includes('?') ? '&' : '?';
-      const res = await fetch(url + separator + 'pin=' + currentPin);
+      const res = await fetch(url + separator + 'pin=' + encodeURIComponent(currentPin));
       if(res.ok) r.textContent = 'Sent successfully!'; else r.textContent = 'Permission Denied!';
     } catch(e){ r.textContent = 'Error: ' + e.message; }
   }
