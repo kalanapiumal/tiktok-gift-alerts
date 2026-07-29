@@ -644,6 +644,10 @@ function connectTikTok() {
       clientParams: {
         app_language: 'en-US',
         webcast_language: 'en-US',
+      },
+      // Disable default signature provider if it hits 404
+      signProviderOptions: {
+        signProviderUrl: 'https://signature-api.zerody.one/sign',
       }
     };
     if (sessionId) {
