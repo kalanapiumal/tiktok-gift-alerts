@@ -535,8 +535,8 @@ app.get('/test-streak', checkSecurity, (req, res) => {
 });
 
 // ── Century test (x100 streak)
-app.get('/test-century', (req, res) => {
-  const streakKey = `test_century_${ Date.now() } `;
+app.get('/test-century', checkSecurity, (req, res) => {
+  const streakKey = `test_century_${Date.now()}`;
   const nickname = 'CenturyKing';
   const giftName = 'Rose';
   const pictureUrl = 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.png';
@@ -563,7 +563,7 @@ app.get('/test-century', (req, res) => {
 });
 
 // ── Whale test (500 coins)
-app.get('/test-whale', (req, res) => {
+app.get('/test-whale', checkSecurity, (req, res) => {
   const nickname = 'WhaleHunter';
   broadcast('gift', {
     streakKey: '', uniqueId: nickname, nickname,
