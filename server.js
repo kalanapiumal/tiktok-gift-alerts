@@ -172,7 +172,7 @@ app.get('/', (req, res) => {
   @keyframes bgPulse { from { opacity: 0.5; } to { opacity: 1; } }
   .box{text-align:center;padding:48px 56px;border:1px solid rgba(255,255,255,0.08);border-radius:28px;background:rgba(255,255,255,0.03);width:100%;max-width:480px;backdrop-filter:blur(20px);box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);display:none}
   #login-ui{display:block}
-  #pin-ui{display:none}
+  #login-ui{display:block}
   #control-ui{display:none}
   .login-header{margin-bottom:32px}
   .login-header h1{font-size:32px;color:#fff;margin-bottom:8px;letter-spacing:1px}
@@ -180,7 +180,6 @@ app.get('/', (req, res) => {
   .google-btn:hover{transform:translateY(-2px)}
   .google-btn img{width:20px}
   input{width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);padding:14px;border-radius:14px;color:#fff;font-size:18px;text-align:center;margin:20px 0;outline:none}
-  .confirm-btn{background:linear-gradient(135deg,#ff2d55,#ff6b00);border:none;border-radius:14px;padding:14px;width:100%;color:#fff;font-weight:bold;cursor:pointer}
   
   /* Logged In UI items */
   h1{font-size:26px;margin-bottom:12px;color:#ff2d55}
@@ -205,12 +204,6 @@ app.get('/', (req, res) => {
   <div class="login-header"><h1>🎁 Secure Access</h1><p>Please sign in with Google</p></div>
   <button class="google-btn" onclick="login()"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"/> Continue with Google</button>
 </div>
-<div id="pin-ui" class="box">
-  <h1>🔑 Enter PIN</h1>
-  <p id="pin-msg">PIN is required to unlock the dashboard</p>
-  <input type="password" id="pin-input" placeholder="••••" maxlength="8" onkeyup="if(event.key==='Enter')verifyPin()"/>
-  <button class="confirm-btn" onclick="verifyPin()">Unlock Dashboard</button>
-</div>
 <div id="control-ui" class="box"></div>
 
 <script>
@@ -225,52 +218,36 @@ app.get('/', (req, res) => {
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const ALLOWED_EMAIL = "${ALLOWED_EMAIL}";
-  let currentPin = localStorage.getItem('gift_pin') || '';
 
   auth.onAuthStateChanged(user => {
     if (user) {
       if (user.email === ALLOWED_EMAIL) {
         document.getElementById('login-ui').style.display = 'none';
-        if(currentPin) verifyPin(); else document.getElementById('pin-ui').style.display = 'block';
+        loadDashboard();
       } else {
         alert("Access Denied: " + user.email);
         auth.signOut();
       }
     } else {
       document.getElementById('login-ui').style.display = 'block';
-      document.getElementById('pin-ui').style.display = 'none';
       document.getElementById('control-ui').style.display = 'none';
     }
   });
 
-  async function verifyPin() {
-    const pin = document.getElementById('pin-input').value || currentPin;
-    if(!pin) return;
+  async function loadDashboard() {
     try {
-      const res = await fetch('/verify-access', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin })
-      });
+      const res = await fetch('/verify-access', { method: 'POST' });
       if(res.ok) {
         const html = await res.text();
-        localStorage.setItem('gift_pin', pin);
-        currentPin = pin;
-        document.getElementById('pin-ui').style.display = 'none';
         const ctrl = document.getElementById('control-ui');
         ctrl.style.display = 'block';
         ctrl.innerHTML = html;
-      } else {
-        localStorage.removeItem('gift_pin');
-        document.getElementById('pin-msg').textContent = '❌ Invalid PIN code';
-        document.getElementById('pin-input').value = '';
-        document.getElementById('pin-ui').style.display = 'block';
       }
-    } catch(e) { alert("Verify failed: " + e.message); }
+    } catch(e) { alert("Failed to load dashboard: " + e.message); }
   }
 
   function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-  function logout() { localStorage.removeItem('gift_pin'); auth.signOut(); }
+  function logout() { auth.signOut(); }
   function toggleTest(){ const s = document.getElementById('test-section'); s.style.display = (s.style.display==='block'?'none':'block'); }
   async function saveMinCoins() {
     const val = document.getElementById('min-coins').value;
@@ -278,7 +255,7 @@ app.get('/', (req, res) => {
     try {
       const res = await fetch('/api/min-coins', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-pin': currentPin },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ minAlertCoins: val })
       });
       if(res.ok) { msg.style.color = '#00d26a'; msg.textContent = 'Saved successfully!'; setTimeout(()=>msg.textContent='', 2000); }
@@ -294,9 +271,7 @@ app.get('/', (req, res) => {
       if(type === 'century') url = '/test-century';
       if(type === 'whale') url = '/test-whale';
       if(type === 'heartme') url = '/test-heartme';
-      // Append pin for server check
-      const separator = url.includes('?') ? '&' : '?';
-      const res = await fetch(url + separator + 'pin=' + encodeURIComponent(currentPin));
+      const res = await fetch(url);
       if(res.ok) r.textContent = 'Sent successfully!'; else r.textContent = 'Permission Denied!';
     } catch(e){ r.textContent = 'Error: ' + e.message; }
   }
@@ -304,30 +279,13 @@ app.get('/', (req, res) => {
 </body></html>`);
 });
 
-function getExpectedPin() {
-  const envPin = process.env.ADMIN_PIN;
-  if (!envPin) return '1122';
-  return String(envPin).replace(/['"]/g, '').trim();
-}
-
 app.post('/verify-access', (req, res) => {
-  const inputPin = String(req.body.pin || '').replace(/['"]/g, '').trim();
-  const expectedPin = getExpectedPin();
-  
-  if (inputPin === expectedPin) {
-    res.send(renderDashboard());
-  } else {
-    console.warn(`[Auth] Failed PIN attempt. Expected length: ${expectedPin.length}, Received length: ${inputPin.length}`);
-    res.status(401).send('Invalid PIN');
-  }
+  res.send(renderDashboard());
 });
 
 // Middleware for test routes
 function checkSecurity(req, res, next) {
-  const inputPin = String(req.query.pin || req.headers['x-pin'] || '').replace(/['"]/g, '').trim();
-  const expectedPin = getExpectedPin();
-  if (inputPin === expectedPin) next();
-  else res.status(403).send('Unauthorized');
+  next();
 }
 
 app.post('/api/min-coins', checkSecurity, (req, res) => {
