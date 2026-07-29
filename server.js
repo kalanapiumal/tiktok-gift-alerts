@@ -617,7 +617,8 @@ app.use(express.static(__dirname, { index: false }));
 function connectTikTok() {
   let WebcastPushConnection;
   try {
-    ({ WebcastPushConnection } = require('tiktok-live-connector'));
+    const tlc = require('tiktok-live-connector');
+    WebcastPushConnection = tlc.TikTokLiveConnection || tlc.WebcastPushConnection || tlc.default || tlc;
   } catch (err) {
     tiktokStatus = 'error';
     console.error('[TikTok] Package missing:', err.message);
