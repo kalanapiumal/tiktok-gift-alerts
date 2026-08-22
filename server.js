@@ -17,7 +17,7 @@ let latestGifterName = null; // Persist for fresh SSE connections
 // ── SECURITY ──
 const ADMIN_PIN = String(process.env.ADMIN_PIN || '1122').trim();
 const ALLOWED_EMAIL = String(process.env.ALLOWED_EMAIL || "kalanapiumal258@gmail.com").trim();
-let globalMinCoins = 1; 
+let globalMinCoins = 2; 
 
 // ── Unknown gift tracker
 // Gifts whose names are NOT in the HTML GIFT_DATA will be logged here
